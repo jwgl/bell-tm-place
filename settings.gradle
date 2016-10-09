@@ -1,0 +1,4 @@
+rootProject.name = 'tm-place'
+
+include 'tm-place-api'
+include 'tm-place-web'
