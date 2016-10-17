@@ -3,13 +3,14 @@ package cn.edu.bnuz.bell.tm.place.web
 class UrlMappings {
 
     static mappings = {
-        "/$controller/$action?/$id?(.$format)?"{
-            constraints {
-                // apply constraints here
-            }
+        "/bookingForms"(resources: 'bookingAdmin', includes:['index', 'show']) {
+            "/reviews"(resources: 'bookingReview', includes: ['show'])
         }
 
-        "/"(view:"/index")
+        "/users"(resources: 'user') {
+            "/bookingForms"(resources: 'bookingForm', includes: ['index'])
+        }
+
         "500"(view:'/error')
         "404"(view:'/notFound')
     }
