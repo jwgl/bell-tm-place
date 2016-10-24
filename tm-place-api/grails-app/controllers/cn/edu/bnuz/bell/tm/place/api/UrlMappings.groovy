@@ -18,8 +18,10 @@ class UrlMappings {
         }
 
         // 借用教室管理
-        "/reissueForms"(resources: 'bookingAdmin', includes:['index', 'show']) {
-            "/reviews"(resources: 'bookingAdmin', includes: ['patch'])
+        "/bookingForms"(resources: 'bookingAdmin', includes:['index', 'show']) {
+            "/reviews"(resources: 'bookingReview', includes: ['show', 'patch']) {
+                "/approvers"(controller: 'bookingReview', action: 'approvers', method: 'GET')
+            }
         }
 
         "/"(controller: 'application', action:'index')
