@@ -9,15 +9,10 @@ import cn.edu.bnuz.bell.organization.Student
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
-import cn.edu.bnuz.bell.security.UserLogService
 import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.tm.common.master.TermService
-import cn.edu.bnuz.bell.workflow.Activities
-import cn.edu.bnuz.bell.workflow.AuditAction
-import cn.edu.bnuz.bell.workflow.AuditStatus
-import cn.edu.bnuz.bell.workflow.CommitCommand
-import cn.edu.bnuz.bell.workflow.WorkflowInstance
-import cn.edu.bnuz.bell.workflow.WorkflowService
+import cn.edu.bnuz.bell.workflow.*
+import cn.edu.bnuz.bell.workflow.events.CommitEventData
 import org.hibernate.SessionFactory
 import org.hibernate.result.ResultSetOutput
 
@@ -28,8 +23,7 @@ class BookingFormService {
     SessionFactory sessionFactory
     TermService termService
     SecurityService securityService
-    UserLogService userLogService
-    WorkflowService workflowService
+    DomainStateMachineHandler domainStateMachineHandler
 
     /**
      * 获取指定用户ID的申请单用于显示
@@ -139,8 +133,8 @@ where item.form.id = :formId
                     endWeek  : it.endWeek,
                     oddEven  : it.oddEven,
                     dayOfWeek: it.dayOfWeek,
-                    section: [
-                            id: it.sectionId,
+                    section  : [
+                            id  : it.sectionId,
                             name: it.sectionName,
                     ]
             ]
@@ -164,9 +158,7 @@ where item.form.id = :formId
             throw new ForbiddenException()
         }
 
-        if (form.status.allow(AuditAction.UPDATE)) {
-            form.editable = true
-        }
+        form.editable = domainStateMachineHandler.canUpdate(form)
 
         return form
     }
@@ -211,7 +203,7 @@ where item.form.id = :formId
             throw new ForbiddenException()
         }
 
-        if (!form.status.allow(AuditAction.UPDATE)) {
+        if (!domainStateMachineHandler.canUpdate(form)) {
             throw new BadRequestException()
         }
 
@@ -303,8 +295,7 @@ order by place.type
                 type: BookingType.load(cmd.bookingTypeId),
                 reason: cmd.reason,
                 dateCreated: now,
-                dateModified: now,
-                status: AuditStatus.CREATED,
+                dateModified: now
         )
 
         cmd.addedItems.each { item ->
@@ -319,9 +310,8 @@ order by place.type
             ))
         }
 
+        domainStateMachineHandler.start(form)
         form.save()
-
-        userLogService.log(AuditAction.CREATE, form)
 
         return form
     }
@@ -336,7 +326,7 @@ order by place.type
             throw new ForbiddenException()
         }
 
-        if (!form.status.allow(AuditAction.UPDATE)) {
+        if (!domainStateMachineHandler.canUpdate(form)) {
             throw new BadRequestException()
         }
 
@@ -363,9 +353,9 @@ order by place.type
             bookingItem.delete()
         }
 
-        form.save()
+        domainStateMachineHandler.update(form)
 
-        userLogService.log(AuditAction.UPDATE, form)
+        form.save()
 
         return form
     }
@@ -381,7 +371,7 @@ order by place.type
             throw new ForbiddenException()
         }
 
-        if (!form.status.allow(AuditAction.DELETE)) {
+        if (!domainStateMachineHandler.canUpdate(form)) {
             throw new BadRequestException()
         }
 
@@ -399,22 +389,13 @@ order by place.type
             throw new ForbiddenException()
         }
 
-        def action = AuditAction.COMMIT
-        if (!form.status.allow(action)) {
+        if (!domainStateMachineHandler.canCommit(form)) {
             throw new BadRequestException()
         }
 
-        if (form.status == AuditStatus.REJECTED) {
-            workflowService.setProcessed(form.workflowInstance, userId)
-        } else {
-            form.workflowInstance = workflowService.createInstance(form.WORKFLOW_ID, cmd.title, cmd.id)
-        }
-        workflowService.createWorkItem(form.workflowInstance, Activities.CHECK, userId, action, cmd.comment, cmd.to)
+        domainStateMachineHandler.commit(userId, cmd.to, cmd.title, cmd.comment, form)
 
-        form.status = form.status.next(action)
         form.save()
-
-        userLogService.log(action, form)
     }
 
     /**
@@ -475,7 +456,7 @@ order by place.type
         }
     }
 
-    def getCheckers(String userId, Long id) {
+    def getCheckers(Long id) {
         BookingChecker.executeQuery '''
 select new map(
   checker.id as id,

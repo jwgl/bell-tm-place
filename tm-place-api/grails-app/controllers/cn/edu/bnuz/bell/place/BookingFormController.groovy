@@ -1,12 +1,15 @@
 package cn.edu.bnuz.bell.place
 
+import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.tm.common.master.TermService
 import cn.edu.bnuz.bell.workflow.AuditAction
 import cn.edu.bnuz.bell.workflow.CommitCommand
+import org.springframework.security.access.prepost.PreAuthorize
 
-class BookingFormController {
+@PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_WRITE")')
+class BookingFormController implements ServiceExceptionHandler {
     BookingFormService bookingFormService
     TermService termService
     SecurityService securityService
@@ -99,7 +102,7 @@ class BookingFormController {
      * @param id
      * @return 审核人
      */
-    def checkers(String userId, Long bookingFormId) {
-        renderJson bookingFormService.getCheckers(userId, bookingFormId)
+    def checkers(Long bookingFormId) {
+        renderJson bookingFormService.getCheckers(bookingFormId)
     }
 }

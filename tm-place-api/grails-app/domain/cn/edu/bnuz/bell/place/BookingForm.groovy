@@ -4,13 +4,14 @@ import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.organization.Department
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
-import cn.edu.bnuz.bell.workflow.AuditStatus
+import cn.edu.bnuz.bell.workflow.IStateObject
+import cn.edu.bnuz.bell.workflow.States
 import cn.edu.bnuz.bell.workflow.WorkflowInstance
 
 /**
  * 教室借用单
  */
-class BookingForm {
+class BookingForm implements IStateObject {
     /**
      * 学期
      */
@@ -34,7 +35,7 @@ class BookingForm {
     /**
      * 状态
      */
-    AuditStatus status
+    States status
 
     /**
      * 通知单
@@ -114,5 +115,7 @@ class BookingForm {
         workflowInstance nullable: true
     }
 
-    static final WORKFLOW_ID = 'place.booking'
+    String getWorkflowId() {
+        'place.booking'
+    }
 }
