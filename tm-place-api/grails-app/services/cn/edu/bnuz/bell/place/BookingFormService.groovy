@@ -11,8 +11,9 @@ import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.tm.common.master.TermService
-import cn.edu.bnuz.bell.workflow.*
-import cn.edu.bnuz.bell.workflow.events.CommitEventData
+import cn.edu.bnuz.bell.workflow.CommitCommand
+import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
+import cn.edu.bnuz.bell.workflow.States
 import org.hibernate.SessionFactory
 import org.hibernate.result.ResultSetOutput
 
@@ -295,7 +296,8 @@ order by place.type
                 type: BookingType.load(cmd.bookingTypeId),
                 reason: cmd.reason,
                 dateCreated: now,
-                dateModified: now
+                dateModified: now,
+                status: domainStateMachineHandler.initialState
         )
 
         cmd.addedItems.each { item ->
@@ -310,14 +312,16 @@ order by place.type
             ))
         }
 
-        domainStateMachineHandler.start(form)
         form.save()
+
+        domainStateMachineHandler.create(form, userId)
 
         return form
     }
 
-    def update(String userId, BookingFormCommand cmd) {
+    BookingForm update(String userId, BookingFormCommand cmd) {
         BookingForm form = BookingForm.get(cmd.id)
+
         if (!form) {
             throw new NotFoundException()
         }
@@ -353,11 +357,9 @@ order by place.type
             bookingItem.delete()
         }
 
-        domainStateMachineHandler.update(form)
+        domainStateMachineHandler.update(form, userId)
 
         form.save()
-
-        return form
     }
 
     void delete(String userId, Long id) {
@@ -375,7 +377,11 @@ order by place.type
             throw new BadRequestException()
         }
 
-        form.delete();
+        if (form.workflowInstance) {
+            form.workflowInstance.delete()
+        }
+
+        form.delete()
     }
 
     def commit(String userId, CommitCommand cmd) {
@@ -393,7 +399,7 @@ order by place.type
             throw new BadRequestException()
         }
 
-        domainStateMachineHandler.commit(userId, cmd.to, cmd.title, cmd.comment, form)
+        domainStateMachineHandler.commit(form, userId, cmd.to, cmd.comment, cmd.title)
 
         form.save()
     }

@@ -45,7 +45,7 @@ class BookingReviewService extends AbstractReviewService {
                 break
         }
 
-        domainStateMachineHandler.accept(userId, cmd.to, cmd.comment, form, workitemId)
+        domainStateMachineHandler.accept(form, userId, cmd.comment, workitemId, cmd.to)
 
         form.save()
     }
@@ -64,7 +64,7 @@ class BookingReviewService extends AbstractReviewService {
         def reviewType = Workitem.get(workitemId).activitySuffix
         checkReviewer(cmd.id, reviewType, userId)
 
-        domainStateMachineHandler.reject(userId, cmd.comment, form, workitemId)
+        domainStateMachineHandler.reject(form, userId, cmd.comment, workitemId)
 
         form.save()
     }
