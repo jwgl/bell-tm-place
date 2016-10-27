@@ -4,7 +4,7 @@ import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.workflow.AcceptCommand
-import cn.edu.bnuz.bell.workflow.AuditAction
+import cn.edu.bnuz.bell.workflow.Events
 import cn.edu.bnuz.bell.workflow.RejectCommand
 import cn.edu.bnuz.bell.workflow.ReviewTypes
 import org.springframework.security.access.prepost.PreAuthorize
@@ -20,15 +20,15 @@ class BookingReviewController implements ServiceExceptionHandler {
 
     def patch(Long bookingAdminId, String id, String op) {
         def userId = securityService.userId
-        def operation = AuditAction.valueOf(op)
+        def operation = Events.valueOf(op)
         switch (operation) {
-            case AuditAction.ACCEPT:
+            case Events.ACCEPT:
                 def cmd = new AcceptCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingAdminId
                 bookingReviewService.accept(cmd, userId, UUID.fromString(id))
                 break
-            case AuditAction.REJECT:
+            case Events.REJECT:
                 def cmd = new RejectCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingAdminId

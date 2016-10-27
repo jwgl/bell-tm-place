@@ -4,8 +4,8 @@ import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.tm.common.master.TermService
-import cn.edu.bnuz.bell.workflow.AuditAction
 import cn.edu.bnuz.bell.workflow.CommitCommand
+import cn.edu.bnuz.bell.workflow.Events
 import org.springframework.security.access.prepost.PreAuthorize
 
 @PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_WRITE")')
@@ -63,9 +63,9 @@ class BookingFormController implements ServiceExceptionHandler {
     }
 
     def patch(String userId, Long id, String op) {
-        def operation = AuditAction.valueOf(op)
+        def operation = Events.valueOf(op)
         switch (operation) {
-            case AuditAction.COMMIT:
+            case Events.COMMIT:
                 def cmd = new CommitCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = id
