@@ -11,9 +11,8 @@ import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.tm.common.master.TermService
-import cn.edu.bnuz.bell.workflow.CommitCommand
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
-import cn.edu.bnuz.bell.workflow.States
+import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
 import org.hibernate.SessionFactory
 import org.hibernate.result.ResultSetOutput
 
@@ -384,7 +383,7 @@ order by place.type
         form.delete()
     }
 
-    def commit(String userId, CommitCommand cmd) {
+    def submit(String userId, SubmitCommand cmd) {
         BookingForm form = BookingForm.get(cmd.id)
 
         if (!form) {
@@ -395,11 +394,11 @@ order by place.type
             throw new ForbiddenException()
         }
 
-        if (!domainStateMachineHandler.canCommit(form)) {
+        if (!domainStateMachineHandler.canSubmit(form)) {
             throw new BadRequestException()
         }
 
-        domainStateMachineHandler.commit(form, userId, cmd.to, cmd.comment, cmd.title)
+        domainStateMachineHandler.submit(form, userId, cmd.to, cmd.comment, cmd.title)
 
         form.save()
     }

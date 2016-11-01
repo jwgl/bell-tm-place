@@ -1,9 +1,9 @@
 package cn.edu.bnuz.bell.tm.place.api
 
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
-import cn.edu.bnuz.bell.workflow.Events
-import cn.edu.bnuz.bell.workflow.IStateObject
-import cn.edu.bnuz.bell.workflow.States
+import cn.edu.bnuz.bell.workflow.Event
+import cn.edu.bnuz.bell.workflow.StateObject
+import cn.edu.bnuz.bell.workflow.State
 import cn.edu.bnuz.bell.workflow.config.DefaultStateMachineConfiguration
 import cn.edu.bnuz.bell.workflow.config.DefaultStateMachinePersistConfiguration
 import org.springframework.context.annotation.Bean
@@ -17,9 +17,8 @@ import org.springframework.statemachine.persist.StateMachinePersister
 class WorkflowConfiguration {
     @Bean
     DomainStateMachineHandler domainStateMachineHandler(
-            StateMachine<States, Events> stateMachine,
-            StateMachinePersister<States, Events, IStateObject> persister) {
-        println stateMachine
+            StateMachine<State, Event> stateMachine,
+            StateMachinePersister<State, Event, StateObject> persister) {
         new DomainStateMachineHandler(stateMachine, persister)
     }
 }

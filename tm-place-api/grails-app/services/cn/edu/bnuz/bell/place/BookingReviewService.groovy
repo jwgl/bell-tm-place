@@ -5,6 +5,8 @@ import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.workflow.*
+import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
+import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import grails.transaction.Transactional
 
 @Transactional
@@ -14,9 +16,9 @@ class BookingReviewService extends AbstractReviewService {
 
     def getFormForReview(Long id, String userId, UUID workitemId) {
         def form = bookingFormService.getFormInfo(id)
-        def reviewType = Workitem.get(workitemId).activitySuffix
-        checkReviewer(id, reviewType, userId)
-        form.reviewType = reviewType
+        def activity = Workitem.get(workitemId).activitySuffix
+        checkReviewer(id, activity, userId)
+        form.activity = activity
         return form
     }
 
@@ -31,15 +33,15 @@ class BookingReviewService extends AbstractReviewService {
             throw new BadRequestException()
         }
 
-        def reviewType = Workitem.get(workitemId).activitySuffix
-        checkReviewer(cmd.id, reviewType, userId)
+        def activity = Workitem.get(workitemId).activitySuffix
+        checkReviewer(cmd.id, activity, userId)
 
-        switch (reviewType) {
-            case ReviewTypes.CHECK:
+        switch (activity) {
+            case Activities.CHECK:
                 form.checker = Teacher.load(userId)
                 form.dateChecked = new Date()
                 break
-            case ReviewTypes.APPROVE:
+            case Activities.APPROVE:
                 form.approver = Teacher.load(userId)
                 form.dateApproved = new Date()
                 break
@@ -61,19 +63,20 @@ class BookingReviewService extends AbstractReviewService {
             throw new BadRequestException()
         }
 
-        def reviewType = Workitem.get(workitemId).activitySuffix
-        checkReviewer(cmd.id, reviewType, userId)
+        def activity = Workitem.get(workitemId).activitySuffix
+        checkReviewer(cmd.id, activity, userId)
 
         domainStateMachineHandler.reject(form, userId, cmd.comment, workitemId)
 
         form.save()
     }
 
-    List<Map> getReviewers(String type, Long id) {
-        switch (type) {
-            case ReviewTypes.CHECK:
+    @Override
+    List<Map> getReviewers(String activity, Long id) {
+        switch (activity) {
+            case Activities.CHECK:
                 return bookingFormService.getCheckers(id)
-            case ReviewTypes.APPROVE:
+            case Activities.APPROVE:
                 return User.findAllWithPermission('PERM_PLACE_BOOKING_APPROVE')
             default:
                 throw new BadRequestException()

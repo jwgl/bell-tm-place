@@ -4,14 +4,15 @@ import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.organization.Department
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
-import cn.edu.bnuz.bell.workflow.IStateObject
-import cn.edu.bnuz.bell.workflow.States
+import cn.edu.bnuz.bell.workflow.StateObject
+import cn.edu.bnuz.bell.workflow.State
+import cn.edu.bnuz.bell.workflow.StateUserType
 import cn.edu.bnuz.bell.workflow.WorkflowInstance
 
 /**
  * 教室借用单
  */
-class BookingForm implements IStateObject {
+class BookingForm implements StateObject {
     /**
      * 学期
      */
@@ -35,7 +36,7 @@ class BookingForm implements IStateObject {
     /**
      * 状态
      */
-    States status
+    State status
 
     /**
      * 通知单
@@ -88,12 +89,13 @@ class BookingForm implements IStateObject {
 
     static mapping = {
         comment          '教室借用单'
+        dynamicUpdate    true
         id               generator: 'identity', comment: 'ID'
         term             comment: '学期'
         department       comment: '借用单位'
         type             comment: '借用类型'
         reason           comment: '借用理由'
-        status           comment: '状态'
+        status           sqlType: 'state', type: StateUserType, comment: '状态'
         report           comment: '通知单'
         user             comment: '借用人'
         dateCreated      comment: '创建时间'

@@ -3,10 +3,10 @@ package cn.edu.bnuz.bell.place
 import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.security.SecurityService
-import cn.edu.bnuz.bell.workflow.AcceptCommand
-import cn.edu.bnuz.bell.workflow.Events
-import cn.edu.bnuz.bell.workflow.RejectCommand
-import cn.edu.bnuz.bell.workflow.ReviewTypes
+import cn.edu.bnuz.bell.workflow.Activities
+import cn.edu.bnuz.bell.workflow.Event
+import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
+import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import org.springframework.security.access.prepost.PreAuthorize
 
 @PreAuthorize('hasAnyAuthority("PERM_PLACE_BOOKING_CHECK", "PERM_PLACE_BOOKING_APPROVE")')
@@ -20,15 +20,15 @@ class BookingReviewController implements ServiceExceptionHandler {
 
     def patch(Long bookingAdminId, String id, String op) {
         def userId = securityService.userId
-        def operation = Events.valueOf(op)
+        def operation = Event.valueOf(op)
         switch (operation) {
-            case Events.ACCEPT:
+            case Event.ACCEPT:
                 def cmd = new AcceptCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingAdminId
                 bookingReviewService.accept(cmd, userId, UUID.fromString(id))
                 break
-            case Events.REJECT:
+            case Event.REJECT:
                 def cmd = new RejectCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingAdminId
@@ -42,6 +42,6 @@ class BookingReviewController implements ServiceExceptionHandler {
     }
 
     def approvers(Long bookingAdminId) {
-        renderJson bookingReviewService.getReviewers(ReviewTypes.APPROVE, bookingAdminId)
+        renderJson bookingReviewService.getReviewers(Activities.APPROVE, bookingAdminId)
     }
 }
