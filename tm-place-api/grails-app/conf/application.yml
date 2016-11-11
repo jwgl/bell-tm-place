@@ -109,7 +109,7 @@ environments:
 
 ---
 server:
-    port: 50420
+    port: 12300
 
 spring:
     application:
