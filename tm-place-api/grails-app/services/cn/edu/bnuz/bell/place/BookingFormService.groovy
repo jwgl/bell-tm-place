@@ -30,7 +30,7 @@ class BookingFormService {
      * @param userId 用户ID
      * @return 申请单列表
      */
-    def list(String userId, int offset, int max) {
+    def list(String userId, Integer offset, Integer max) {
         BookingForm.executeQuery '''
 select new map(
   bf.id as id,
@@ -281,16 +281,15 @@ order by place.type
      * 创建申请单
      * @param userId
      * @param userName
-     * @param term
      * @param cmd
      * @return
      */
-    BookingForm create(String userId, Term term, BookingFormCommand cmd) {
+    BookingForm create(String userId, BookingFormCommand cmd) {
         def now = new Date()
 
         BookingForm form = new BookingForm(
                 user: User.load(userId),
-                term: term,
+                term: termService.activeTerm,
                 department: Department.load(cmd.departmentId),
                 type: BookingType.load(cmd.bookingTypeId),
                 reason: cmd.reason,
@@ -362,7 +361,7 @@ order by place.type
     }
 
     void delete(String userId, Long id) {
-        BookingForm form = BookingForm.get(id);
+        BookingForm form = BookingForm.get(id)
 
         if (!form) {
             throw new NotFoundException()
@@ -433,12 +432,12 @@ order by place.type
 
     /**
      * 查找场地
-     * @param term 学期
      * @param userType 用户类型
      * @param cmd 查询参数
      * @return [id: 场地ID, name: 名称, seat: 座位数, booking: 正在预订的数量]*
      */
-    def findPlaces(Term term, UserType userType, FindPlaceCommand cmd) {
+    def findPlaces(UserType userType, FindPlaceCommand cmd) {
+        Term term = termService.activeTerm
         def session = sessionFactory.currentSession
         def query = session.createStoredProcedureCall('sp_find_available_place')
         def outputs = query.with {
