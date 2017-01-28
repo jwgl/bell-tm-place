@@ -11,13 +11,12 @@ import org.springframework.security.access.prepost.PreAuthorize
 @PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_WRITE")')
 class BookingFormController implements ServiceExceptionHandler {
     BookingFormService bookingFormService
-    TermService termService
     SecurityService securityService
 
     def index(String userId) {
         def user = User.get(userId)
-        def offset = params.int("offset") ?: 0
-        def max = params.int("max") ?: 10
+        def offset = params.int('offset') ?: 0
+        def max = params.int('max') ?: 10
         def count = bookingFormService.formCount(userId);
         def forms = bookingFormService.list(userId, offset, max)
         renderJson([
@@ -38,10 +37,9 @@ class BookingFormController implements ServiceExceptionHandler {
     }
 
     def save(String userId) {
-        def term = termService.activeTerm
         def cmd = new BookingFormCommand()
         bindData(cmd, request.JSON)
-        def form = bookingFormService.create(userId, term, cmd)
+        def form = bookingFormService.create(userId, cmd)
         renderJson([id: form.id])
     }
 
@@ -93,7 +91,7 @@ class BookingFormController implements ServiceExceptionHandler {
         def cmd = new FindPlaceCommand()
         bindData(cmd, request)
         def userType = securityService.userType
-        renderJson bookingFormService.findPlaces(termService.activeTerm, userType, cmd)
+        renderJson bookingFormService.findPlaces(userType, cmd)
     }
 
     /**
