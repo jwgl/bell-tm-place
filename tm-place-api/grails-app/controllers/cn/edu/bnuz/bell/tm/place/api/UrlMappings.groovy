@@ -3,13 +3,12 @@ package cn.edu.bnuz.bell.tm.place.api
 class UrlMappings {
 
     static mappings = {
-        // 按用户获取信息
         "/users"(resources: 'user', includes: []) {
             "/bookings"(resources: 'bookingForm') {
+                "/checkers"(controller: 'bookingForm', action: 'checkers', method: 'GET')
                 collection {
                     "/places"(controller: 'bookingForm', action: 'places', method: 'GET')
                 }
-                "/checkers"(controller: 'bookingForm', action: 'checkers', method: 'GET')
             }
         }
 
@@ -17,10 +16,16 @@ class UrlMappings {
             "/bookingTypes"(controller: 'bookingForm', action: 'types', method: 'GET')
         }
 
-        // 借用教室管理
-        "/bookings"(resources: 'bookingAdmin', includes:['index', 'show']) {
-            "/reviews"(resources: 'bookingReview', includes: ['show', 'patch']) {
-                "/approvers"(controller: 'bookingReview', action: 'approvers', method: 'GET')
+        "/checkers"(resources: 'checker', includes: []) {
+            "/bookings"(resources: 'bookingCheck', includes:['index']) {
+                "/workitems"(resources: 'bookingCheck', includes: ['show', 'patch'])
+                "/approvers"(controller: 'bookingCheck', action: 'approvers', method: 'GET')
+            }
+        }
+
+        "/approvers"(resources: 'approver', includes: []) {
+            "/bookings"(resources: 'bookingApproval', includes:['index']) {
+                "/workitems"(resources: 'bookingApproval', includes: ['show', 'patch'])
             }
         }
 

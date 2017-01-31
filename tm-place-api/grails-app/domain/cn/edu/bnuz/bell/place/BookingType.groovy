@@ -11,6 +11,10 @@ class BookingType {
      */
     boolean isAdminDept
 
+    static hasMany = [
+            auths: BookingAuth
+    ]
+
     static mapping = {
         comment     '借用类型'
         name        comment: '名称'
