@@ -116,7 +116,7 @@ order by form.dateApproved desc
 
         def activity = Workitem.get(workitemId).activitySuffix
         if (activity != Activities.APPROVE) {
-            throw BadRequestException()
+            throw new BadRequestException()
         }
         checkReviewer(cmd.id, activity, userId)
 
