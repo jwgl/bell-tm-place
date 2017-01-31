@@ -8,7 +8,7 @@ class BookingFormInterceptor {
     SecurityService securityService
 
     boolean before() {
-        if (params.userId != securityService.userId) {
+        if (actionName != 'types' && params.userId != securityService.userId) {
             render(status: HttpStatus.FORBIDDEN)
             return false
         } else {

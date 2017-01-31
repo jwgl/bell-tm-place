@@ -6,7 +6,7 @@ import cn.edu.bnuz.bell.organization.Teacher
 /**
  * 借用审核人
  */
-class BookingChecker implements Serializable {
+class BookingAuth implements Serializable {
     /**
      * 借用类型
      */
@@ -21,6 +21,8 @@ class BookingChecker implements Serializable {
      * 审核人
      */
     Teacher checker
+
+    static belongsTo = [type: BookingType]
 
     static mapping = {
         comment     '借用审核人'

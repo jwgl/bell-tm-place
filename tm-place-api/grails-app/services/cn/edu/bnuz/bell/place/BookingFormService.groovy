@@ -229,9 +229,9 @@ where item.form.id = :formId
     }
 
     private List<Map<String, String>> getBookingDepartments(String departmentId) {
-        BookingChecker.executeQuery '''
+        BookingAuth.executeQuery '''
 select distinct new Map(dept.id as id, dept.name as name)
-from BookingChecker bc
+from BookingAuth bc
 join bc.department dept
 where dept.id = :departmentId or dept.isTeaching = false
 order by dept.id
@@ -246,11 +246,12 @@ order by dept.id
     def getBookingTypes(String departmentId) {
         BookingType.executeQuery '''
 select new map(bt.id as id, bt.name as name, checker.name as checker)
-from BookingChecker bc
+from BookingAuth bc
 join bc.type bt
 join bc.department dept
 join bc.checker checker
 where dept.id = :departmentId
+order by checker, name
 ''', [departmentId: departmentId]
     }
 
@@ -461,12 +462,12 @@ order by place.type
     }
 
     def getCheckers(Long id) {
-        BookingChecker.executeQuery '''
+        BookingAuth.executeQuery '''
 select new map(
   checker.id as id,
   checker.name as name
 )
-from BookingChecker bc
+from BookingAuth bc
 join bc.checker checker
 where (bc.type, bc.department) in (
   select form.type, form.department
