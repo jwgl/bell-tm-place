@@ -35,7 +35,7 @@ class BookingCheckController implements ServiceExceptionHandler {
 
     def show(String checkerId, Long bookingCheckId, String id) {
         if (id == 'undefined') {
-            renderJson bookingCheckService.getFormForReview(checkerId, bookingCheckId, Activities.APPROVE)
+            renderJson bookingCheckService.getFormForReview(checkerId, bookingCheckId, Activities.CHECK)
         } else {
             renderJson bookingCheckService.getFormForReview(checkerId, bookingCheckId, UUID.fromString(id))
         }

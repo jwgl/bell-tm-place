@@ -37,7 +37,6 @@ class BookingApprovalController implements ServiceExceptionHandler {
     }
 
     def show(String approverId, Long bookingApprovalId, String id) {
-        println params
         if (id == 'undefined') {
             renderJson bookingApprovalService.getFormForReview(approverId, bookingApprovalId, Activities.APPROVE)
         } else {
