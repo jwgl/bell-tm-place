@@ -118,6 +118,8 @@ class BookingForm implements StateObject {
     }
 
     String getWorkflowId() {
-        'place.booking'
+        WORKFLOW_ID
     }
+
+    static final WORKFLOW_ID = 'place.booking'
 }

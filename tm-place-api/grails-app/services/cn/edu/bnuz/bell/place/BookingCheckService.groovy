@@ -38,7 +38,7 @@ where exists (
   and workitem.activity.id = :activityId
   and workitem.dateProcessed is not null
 )
-''',[userId: userId, activityId: 'place.booking.check']
+''',[userId: userId, activityId: "${BookingForm.WORKFLOW_ID}.${Activities.CHECK}"]
         return [
                 PENDING: pending,
                 PROCESSED: processed,
@@ -46,7 +46,6 @@ where exists (
     }
 
     def findPendingForms(String userId, int offset, int max) {
-        println "$userId $offset $max"
         BookingForm.executeQuery '''
 select new map(
   form.id as id,
@@ -101,7 +100,7 @@ order by form.dateChecked desc
 
         def workitem = Workitem.findByInstanceAndActivityAndToAndDateProcessedIsNull(
                 WorkflowInstance.load(form.workflowInstanceId),
-                WorkflowActivity.load("place.booking.${activity}"),
+                WorkflowActivity.load("${BookingForm.WORKFLOW_ID}.${activity}"),
                 User.load(userId),
         )
         if (workitem) {
@@ -161,6 +160,10 @@ order by form.dateChecked desc
         }
 
         def activity = Workitem.get(workitemId).activitySuffix
+        if (activity != Activities.CHECK) {
+            throw new BadRequestException()
+        }
+
         checkReviewer(cmd.id, activity, userId)
 
         domainStateMachineHandler.reject(form, userId, cmd.comment, workitemId)
