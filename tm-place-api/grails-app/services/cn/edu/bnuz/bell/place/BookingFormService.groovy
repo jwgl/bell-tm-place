@@ -13,12 +13,14 @@ import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.tm.common.master.TermService
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
 import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
+import grails.transaction.Transactional
 import org.hibernate.SessionFactory
 import org.hibernate.result.ResultSetOutput
 
 import javax.persistence.ParameterMode
 import java.time.LocalDate
 
+@Transactional
 class BookingFormService {
     SessionFactory sessionFactory
     TermService termService
@@ -400,6 +402,7 @@ order by place.type
 
         domainStateMachineHandler.submit(form, userId, cmd.to, cmd.comment, cmd.title)
 
+        form.dateSubmitted = new Date()
         form.save()
     }
 
