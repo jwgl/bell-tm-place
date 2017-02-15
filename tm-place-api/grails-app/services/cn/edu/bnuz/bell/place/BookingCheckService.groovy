@@ -9,13 +9,18 @@ import cn.edu.bnuz.bell.service.DataAccessService
 import cn.edu.bnuz.bell.workflow.*
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
+import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
 import grails.transaction.Transactional
 
 @Transactional
 class BookingCheckService extends AbstractReviewService {
+    static final CHECK_ACTIVITY = "${BookingForm.WORKFLOW_ID}.${Activities.CHECK}"
+
     BookingFormService bookingFormService
     DomainStateMachineHandler domainStateMachineHandler
     DataAccessService dataAccessService
+
+
 
     def getCounts(String userId) {
         def pending = dataAccessService.getInteger '''
@@ -38,7 +43,7 @@ where exists (
   and workitem.activity.id = :activityId
   and workitem.dateProcessed is not null
 )
-''',[userId: userId, activityId: "${BookingForm.WORKFLOW_ID}.${Activities.CHECK}"]
+''',[userId: userId, activityId: CHECK_ACTIVITY]
         return [
                 PENDING: pending,
                 PROCESSED: processed,
@@ -51,10 +56,10 @@ select new map(
   form.id as id,
   user.id as userId,
   user.name as userName,
-  form.dateModified as date,
   dept.name as department,
-  form.reason as reason,
-  type.name as type
+  form.dateSubmitted as date,
+  type.name as type,
+  form.status as status
 )
 from BookingForm form
 join form.user user
@@ -64,7 +69,7 @@ join type.auths auth
 where auth.department = dept
 and auth.checker.id = :userId
 and form.status = :status
-order by form.dateModified
+order by form.dateSubmitted
 ''',[userId: userId, status: State.SUBMITTED], [offset: offset, max: max]
     }
 
@@ -74,9 +79,8 @@ select new map(
   form.id as id,
   user.id as userId,
   user.name as userName,
-  form.dateChecked as date,
   dept.name as department,
-  form.reason as reason,
+  form.dateChecked as date,
   type.name as type,
   form.status as status
 )
@@ -92,7 +96,7 @@ where exists (
   and workitem.dateProcessed is not null
 )
 order by form.dateChecked desc
-''',[userId: userId, activityId: 'place.booking.check'], [offset: offset, max: max]
+''',[userId: userId, activityId: CHECK_ACTIVITY], [offset: offset, max: max]
     }
 
     def getFormForReview(String userId, Long id, String activity) {
@@ -122,7 +126,7 @@ order by form.dateChecked desc
         return form
     }
 
-    void accept(AcceptCommand cmd, String userId, UUID workitemId) {
+    void accept(String userId, AcceptCommand cmd, UUID workitemId) {
         BookingForm form = BookingForm.get(cmd.id)
 
         if (!form) {
@@ -148,7 +152,7 @@ order by form.dateChecked desc
         form.save()
     }
 
-    void reject(RejectCommand cmd, String userId, UUID workitemId) {
+    void reject(String userId, RejectCommand cmd, UUID workitemId) {
         BookingForm form = BookingForm.get(cmd.id)
 
         if (!form) {

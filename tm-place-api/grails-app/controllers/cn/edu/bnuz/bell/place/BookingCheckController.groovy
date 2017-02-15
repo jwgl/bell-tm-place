@@ -48,13 +48,13 @@ class BookingCheckController implements ServiceExceptionHandler {
                 def cmd = new AcceptCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingCheckId
-                bookingCheckService.accept(cmd, checkerId, UUID.fromString(id))
+                bookingCheckService.accept(checkerId, cmd, UUID.fromString(id))
                 break
             case Event.REJECT:
                 def cmd = new RejectCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingCheckId
-                bookingCheckService.reject(cmd, checkerId, UUID.fromString(id))
+                bookingCheckService.reject(checkerId, cmd, UUID.fromString(id))
                 break
             default:
                 throw new BadRequestException()

@@ -6,6 +6,7 @@ import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.Event
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
+import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
 import org.springframework.security.access.prepost.PreAuthorize
 
 @PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_APPROVE")')
@@ -51,13 +52,19 @@ class BookingApprovalController implements ServiceExceptionHandler {
                 def cmd = new AcceptCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingApprovalId
-                bookingApprovalService.accept(cmd, approverId, UUID.fromString(id))
+                bookingApprovalService.accept(approverId, cmd, UUID.fromString(id))
                 break
             case Event.REJECT:
                 def cmd = new RejectCommand()
                 bindData(cmd, request.JSON)
                 cmd.id = bookingApprovalId
-                bookingApprovalService.reject(cmd, approverId, UUID.fromString(id))
+                bookingApprovalService.reject(approverId, cmd, UUID.fromString(id))
+                break
+            case Event.REVOKE:
+                def cmd = new RevokeCommand()
+                bindData(cmd, request.JSON)
+                cmd.id = bookingApprovalId
+                bookingApprovalService.revoke(approverId, cmd)
                 break
             default:
                 throw new BadRequestException()

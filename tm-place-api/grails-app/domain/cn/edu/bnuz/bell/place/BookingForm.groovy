@@ -59,6 +59,11 @@ class BookingForm implements StateObject {
     Date dateModified
 
     /**
+     * 提交时间
+     */
+    Date dateSubmitted
+
+    /**
      * 审核人
      */
     Teacher checker
@@ -100,6 +105,7 @@ class BookingForm implements StateObject {
         user             comment: '借用人'
         dateCreated      comment: '创建时间'
         dateModified     comment: '修改时间'
+        dateSubmitted    comment: '提交时间'
         checker          comment: '审核人'
         dateChecked      comment: '审核时间'
         approver         comment: '审批人'
@@ -110,6 +116,7 @@ class BookingForm implements StateObject {
     static constraints = {
         reason           maxSize: 255
         report           nullable: true
+        dateSubmitted    nullable: true
         checker          nullable: true
         dateChecked      nullable: true
         approver         nullable: true
