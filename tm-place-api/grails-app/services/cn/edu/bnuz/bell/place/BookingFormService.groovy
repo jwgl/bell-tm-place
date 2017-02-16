@@ -114,8 +114,7 @@ select new map(
   item.oddEven as oddEven,
   item.dayOfWeek as dayOfWeek,
   section.id as sectionId,
-  section.name as sectionName,
-  item.occupied as occupied
+  section.name as sectionName
 )
 from BookingItem item
 join item.place place
