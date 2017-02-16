@@ -29,6 +29,14 @@ class UrlMappings {
             }
         }
 
+        "/bookings"(resources: 'booking', includes: ['show'])
+
+        "/bookingReports"(resources: 'bookingReport') {
+            collection {
+                "/unreportedForms"(action: 'unreportedForms', method: 'GET')
+            }
+        }
+
         "500"(view: '/error')
         "404"(view: '/notFound')
         "403"(view: '/forbidden')

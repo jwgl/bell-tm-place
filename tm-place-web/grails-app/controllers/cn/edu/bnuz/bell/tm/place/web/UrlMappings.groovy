@@ -15,6 +15,10 @@ class UrlMappings {
             "/bookings"(resources: 'bookingApproval', includes: ['index'])
         }
 
+        "/bookings"(resources: 'booking', includes: ['show'])
+
+        "/bookingReports"(resources: 'bookingReport', includes: ['index'])
+
         "500"(view:'/error')
         "404"(view:'/notFound')
     }

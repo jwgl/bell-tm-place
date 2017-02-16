@@ -9,7 +9,6 @@ class BookingReport {
      */
     Teacher creator
 
-
     /**
      * 创建时间
      */
@@ -26,16 +25,17 @@ class BookingReport {
     Date dateModified
 
     static hasMany = [
-        bookings: BookingForm
+        forms: BookingForm
     ]
 
     static mapping = {
         comment         '借用通知单'
+        id              generator: 'identity', comment: 'ID'
         creator         comment: '创建人'
         dateCreated     comment: '创建时间'
         modifier        comment: '修改人'
         dateModified    comment: '修改时间'
-
+        forms           cascade: 'save-update'
     }
 
     static constraints = {

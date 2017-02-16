@@ -34,11 +34,6 @@ class BookingItem {
      */
     BookingSection section
 
-    /**
-     * 是否已占用
-     */
-    boolean occupied
-
     static belongsTo = [
         form: BookingForm
     ]
@@ -52,6 +47,5 @@ class BookingItem {
         oddEven     comment: '单双周'
         dayOfWeek   comment: '星期几'
         section     comment: '节次'
-        occupied    comment: '是否已占用'
     }
 }

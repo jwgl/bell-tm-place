@@ -1,7 +1,7 @@
 package cn.edu.bnuz.bell.place
 
 class BookingReportCommand {
-    Long reportId
+    Long id
     List<Long> addedItems
     List<Long> removedItems
 }
