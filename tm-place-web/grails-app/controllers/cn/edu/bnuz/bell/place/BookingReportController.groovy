@@ -9,7 +9,6 @@ import org.springframework.security.access.prepost.PreAuthorize
 @PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_APPROVE")')
 class BookingReportController {
     ReportClientService reportClientService
-
     def index() { }
 
     def show(Long id) {
