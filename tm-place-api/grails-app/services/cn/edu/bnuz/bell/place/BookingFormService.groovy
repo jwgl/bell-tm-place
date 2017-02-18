@@ -5,8 +5,6 @@ import cn.edu.bnuz.bell.http.ForbiddenException
 import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.organization.Department
-import cn.edu.bnuz.bell.organization.Student
-import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.security.UserType
@@ -72,6 +70,7 @@ select new map(
   term.id as term,
   user.id as userId,
   user.name as userName,
+  user.userType as userType,
   user.longPhone as phoneNumber,
   department.id as departmentId,
   department.name as departmentName,
@@ -403,34 +402,6 @@ order by place.type
 
         form.dateSubmitted = new Date()
         form.save()
-    }
-
-    /**
-     * 获取用户其它信息
-     * @param checkerDepartmentId 审核人所在部门ID
-     * @param applicantId 申请人ID
-     * @return 其它信息
-     */
-    def getUserExtraInfo(String checkerDepartmentId, String applicantId) {
-        def extraInfo = []
-        def user = User.get(applicantId)
-        switch (user.userType) {
-            case UserType.STUDENT:
-                Student student = Student.get(applicantId)
-                if (student.department.id != checkerDepartmentId) {
-                    extraInfo << student.department.name
-                }
-                extraInfo << student.adminClass.name
-                extraInfo << applicantId
-                break
-            case UserType.TEACHER:
-                Teacher teacher = Teacher.get(applicantId)
-                if (teacher.department.id != checkerDepartmentId) {
-                    extraInfo << teacher.department.name
-                }
-                break
-        }
-        return extraInfo
     }
 
     /**

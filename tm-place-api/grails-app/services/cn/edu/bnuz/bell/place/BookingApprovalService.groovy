@@ -3,11 +3,8 @@ package cn.edu.bnuz.bell.place
 import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.organization.Teacher
-import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.State
-import cn.edu.bnuz.bell.workflow.WorkflowActivity
-import cn.edu.bnuz.bell.workflow.WorkflowInstance
 import cn.edu.bnuz.bell.workflow.Workitem
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
@@ -122,11 +119,10 @@ order by form.dateApproved desc
         }
         checkReviewer(cmd.id, activity, userId)
 
-        form.approver = Teacher.load(userId)
-        form.dateApproved = new Date()
-
         domainStateMachineHandler.accept(form, userId, cmd.comment, workitemId, cmd.to)
 
+        form.approver = Teacher.load(userId)
+        form.dateApproved = new Date()
         form.save()
         insertSyncForm(form.id)
     }
