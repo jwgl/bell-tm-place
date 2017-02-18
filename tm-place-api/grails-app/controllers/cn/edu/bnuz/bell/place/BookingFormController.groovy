@@ -3,9 +3,8 @@ package cn.edu.bnuz.bell.place
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
-import cn.edu.bnuz.bell.tm.common.master.TermService
-import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
 import cn.edu.bnuz.bell.workflow.Event
+import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
 import org.springframework.security.access.prepost.PreAuthorize
 
 @PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_WRITE")')

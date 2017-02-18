@@ -2,7 +2,6 @@ package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.organization.Teacher
 
-
 class BookingReport {
     /**
      * 创建人

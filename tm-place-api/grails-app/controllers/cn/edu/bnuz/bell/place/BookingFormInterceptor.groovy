@@ -3,7 +3,6 @@ package cn.edu.bnuz.bell.place
 import cn.edu.bnuz.bell.security.SecurityService
 import org.springframework.http.HttpStatus
 
-
 class BookingFormInterceptor {
     SecurityService securityService
 

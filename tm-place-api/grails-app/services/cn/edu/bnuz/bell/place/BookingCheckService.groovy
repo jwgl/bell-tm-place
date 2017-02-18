@@ -2,14 +2,14 @@ package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.NotFoundException
-import cn.edu.bnuz.bell.master.Term
+import cn.edu.bnuz.bell.organization.Student
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
+import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.service.DataAccessService
 import cn.edu.bnuz.bell.workflow.*
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
-import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
 import grails.transaction.Transactional
 
 @Transactional
@@ -19,8 +19,6 @@ class BookingCheckService extends AbstractReviewService {
     BookingFormService bookingFormService
     DomainStateMachineHandler domainStateMachineHandler
     DataAccessService dataAccessService
-
-
 
     def getCounts(String userId) {
         def pending = dataAccessService.getInteger '''
@@ -111,8 +109,8 @@ order by form.dateChecked desc
             form.workitemId = workitem.id
         }
         checkReviewer(id, activity, userId)
-        form.activity = activity
 
+        form.extraInfo = getUserExtraInfo(form)
         return form
     }
 
@@ -121,9 +119,30 @@ order by form.dateChecked desc
 
         def activity = Workitem.get(workitemId).activitySuffix
         checkReviewer(id, activity, userId)
-        form.activity = activity
 
+        form.extraInfo = getUserExtraInfo(form)
         return form
+    }
+
+    def getUserExtraInfo(Map form) {
+        def extraInfo = []
+
+        switch (form.userType) {
+            case UserType.STUDENT:
+                Student student = Student.get(form.userId)
+                if(student.department.id != form.departmentId) {
+                    extraInfo << student.department.name
+                }
+                extraInfo << student.adminClass.name
+                break
+            case UserType.TEACHER:
+                Teacher teacher = Teacher.get(form.userId)
+                if(teacher.department.id != form.departmentId) {
+                    extraInfo << teacher.department.name
+                }
+                break
+        }
+        return extraInfo
     }
 
     void accept(String userId, AcceptCommand cmd, UUID workitemId) {
@@ -144,11 +163,10 @@ order by form.dateChecked desc
 
         checkReviewer(cmd.id, activity, userId)
 
-        form.checker = Teacher.load(userId)
-        form.dateChecked = new Date()
-
         domainStateMachineHandler.accept(form, userId, cmd.comment, workitemId, cmd.to)
 
+        form.checker = Teacher.load(userId)
+        form.dateChecked = new Date()
         form.save()
     }
 
@@ -164,7 +182,6 @@ order by form.dateChecked desc
         }
 
         def activity = Workitem.get(workitemId).activitySuffix
-
         checkReviewer(cmd.id, activity, userId)
 
         domainStateMachineHandler.reject(form, userId, cmd.comment, workitemId)
