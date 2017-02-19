@@ -167,7 +167,7 @@ where item.form.id = :formId
         def user = User.get(userId)
         def term = termService.activeTerm
         def departments = getBookingDepartments(user.departmentId)
-        def department = departments.find { it.departmentId == user.departmentId }
+        def department = departments.find { it.id == user.departmentId }
         def departmentId = department ? department.id : departments[0].id
         def bookingTypes = getBookingTypes(departmentId)
 
