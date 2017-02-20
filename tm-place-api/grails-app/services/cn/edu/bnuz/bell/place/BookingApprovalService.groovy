@@ -119,6 +119,10 @@ order by form.dateApproved desc
         }
         checkReviewer(cmd.id, activity, userId)
 
+        if (!checkOccupation(form)) {
+            return
+        }
+
         domainStateMachineHandler.accept(form, userId, cmd.comment, workitemId, cmd.to)
 
         form.approver = Teacher.load(userId)

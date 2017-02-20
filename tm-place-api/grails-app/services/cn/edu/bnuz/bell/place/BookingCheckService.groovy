@@ -2,6 +2,7 @@ package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.NotFoundException
+import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.organization.Student
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
@@ -11,6 +12,10 @@ import cn.edu.bnuz.bell.workflow.*
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import grails.transaction.Transactional
+import org.hibernate.SessionFactory
+import org.hibernate.result.ResultSetOutput
+
+import javax.persistence.ParameterMode
 
 @Transactional
 class BookingCheckService extends AbstractReviewService {
@@ -19,6 +24,7 @@ class BookingCheckService extends AbstractReviewService {
     BookingFormService bookingFormService
     DomainStateMachineHandler domainStateMachineHandler
     DataAccessService dataAccessService
+    SessionFactory sessionFactory
 
     def getCounts(String userId) {
         def pending = dataAccessService.getInteger '''
@@ -145,6 +151,33 @@ order by form.dateChecked desc
         return extraInfo
     }
 
+    /**
+     * 查询是否存在占用
+     * @param form 表单
+     * @return 是否通过检查 - true：无占用；false：有占用
+     */
+    def checkOccupation(BookingForm form) {
+
+        def session = sessionFactory.currentSession
+        def query = session.createStoredProcedureCall('tm.sp_find_booking_conflict')
+        query.registerParameter('p_form_id', Long, ParameterMode.IN).bindValue(form.id)
+        List conflicts = query.outputs.current.resultList.toList()
+
+        def result = true
+        conflicts.forEach { itemId ->
+            def conflictItem = form.items.find { item ->
+                item.id == itemId
+            }
+
+            if (conflictItem) {
+                conflictItem.occupied = true
+                conflictItem.save()
+                result = false
+            }
+        }
+        return result
+    }
+
     void accept(String userId, AcceptCommand cmd, UUID workitemId) {
         BookingForm form = BookingForm.get(cmd.id)
 
@@ -162,6 +195,10 @@ order by form.dateChecked desc
         }
 
         checkReviewer(cmd.id, activity, userId)
+
+        if (!checkOccupation(form)) {
+            return
+        }
 
         domainStateMachineHandler.accept(form, userId, cmd.comment, workitemId, cmd.to)
 

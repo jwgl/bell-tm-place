@@ -113,7 +113,8 @@ select new map(
   item.oddEven as oddEven,
   item.dayOfWeek as dayOfWeek,
   section.id as sectionId,
-  section.name as sectionName
+  section.name as sectionName,
+  item.occupied as occupied
 )
 from BookingItem item
 join item.place place
@@ -136,7 +137,8 @@ where item.form.id = :formId
                     section  : [
                             id  : it.sectionId,
                             name: it.sectionName,
-                    ]
+                    ],
+                    occupied : it.occupied,
             ]
         }
         return form
