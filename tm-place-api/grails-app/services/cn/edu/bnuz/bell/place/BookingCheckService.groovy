@@ -189,8 +189,9 @@ order by form.dateChecked desc
             throw new BadRequestException()
         }
 
-        def activity = Workitem.get(workitemId).activitySuffix
-        if (activity != Activities.CHECK) {
+        def workitem = Workitem.get(workitemId)
+        def activity = workitem.activitySuffix
+        if (activity != Activities.CHECK ||  workitem.dateProcessed || workitem.to.id != userId ) {
             throw new BadRequestException()
         }
 

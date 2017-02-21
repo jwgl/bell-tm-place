@@ -113,10 +113,12 @@ order by form.dateApproved desc
             throw new BadRequestException()
         }
 
-        def activity = Workitem.get(workitemId).activitySuffix
-        if (activity != Activities.APPROVE) {
+        def workitem = Workitem.get(workitemId)
+        def activity = workitem.activitySuffix
+        if (activity != Activities.APPROVE ||  workitem.dateProcessed || workitem.to.id != userId) {
             throw new BadRequestException()
         }
+
         checkReviewer(cmd.id, activity, userId)
 
         if (!checkOccupation(form)) {
