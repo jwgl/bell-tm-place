@@ -60,7 +60,7 @@ class BookingCheckController implements ServiceExceptionHandler {
                 throw new BadRequestException()
         }
 
-        renderOk()
+        show(checkerId, bookingCheckId, id)
     }
 
     def approvers(String checkerId, Long bookingCheckId) {
