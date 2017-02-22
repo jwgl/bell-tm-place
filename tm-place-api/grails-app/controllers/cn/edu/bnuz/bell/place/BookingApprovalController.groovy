@@ -70,6 +70,6 @@ class BookingApprovalController implements ServiceExceptionHandler {
                 throw new BadRequestException()
         }
 
-        renderOk()
+        show(approverId, bookingApprovalId, id)
     }
 }
