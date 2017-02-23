@@ -10,7 +10,9 @@ class BookingReportController implements ServiceExceptionHandler {
     BookingReportService bookingReportService
 
     def index() {
-        renderJson bookingReportService.getAll()
+        def offset = params.int('offset') ?: 0
+        def max = params.int('max') ?: 10
+        renderJson bookingReportService.list(offset, max)
     }
 
     def show(Long id) {

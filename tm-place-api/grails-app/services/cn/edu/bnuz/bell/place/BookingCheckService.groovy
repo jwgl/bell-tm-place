@@ -2,7 +2,6 @@ package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.NotFoundException
-import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.organization.Student
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
@@ -13,7 +12,6 @@ import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import grails.transaction.Transactional
 import org.hibernate.SessionFactory
-import org.hibernate.result.ResultSetOutput
 
 import javax.persistence.ParameterMode
 
@@ -243,4 +241,3 @@ order by form.dateChecked desc
         User.findAllWithPermission('PERM_PLACE_BOOKING_APPROVE')
     }
 }
-

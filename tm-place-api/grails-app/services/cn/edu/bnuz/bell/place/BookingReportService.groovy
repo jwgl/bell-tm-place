@@ -8,7 +8,7 @@ import grails.transaction.Transactional
 @Transactional
 class BookingReportService {
 
-    def getAll() {
+    def list(Integer offset, Integer max) {
         BookingReport.executeQuery '''
 select new map(
   report.id as id,
@@ -21,7 +21,7 @@ from BookingReport report
 join report.creator creator
 left join report.modifier modifier
 order by report.id desc
-'''
+''', [], [offset: offset, max: max]
     }
 
     def getInfo(Long id) {
