@@ -16,7 +16,7 @@ class BookingFormController implements ServiceExceptionHandler {
         def user = User.get(userId)
         def offset = params.int('offset') ?: 0
         def max = params.int('max') ?: 10
-        def count = bookingFormService.formCount(userId);
+        def count = bookingFormService.formCount(userId)
         def forms = bookingFormService.list(userId, offset, max)
         renderJson([
                 user: [
