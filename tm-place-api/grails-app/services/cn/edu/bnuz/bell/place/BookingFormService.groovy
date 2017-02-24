@@ -79,6 +79,7 @@ select new map(
   form.reason as reason,
   form.dateCreated as dateCreated,
   form.dateModified as dateModified,
+  form.dateSubmitted as dateSubmitted,
   checker.name as checker,
   form.dateChecked as dateChecked,
   approver.name as approver,
