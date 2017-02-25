@@ -180,7 +180,7 @@ where item.form.id = :formId
                         maxWeek    : term.maxWeek,
                         currentWeek: term.currentWorkWeek,
                         startDate  : term.startDate,
-                        swapDates  : term.swapDates
+                        swapDates  : term.swapToDates
                 ],
                 departments : departments,
                 bookingTypes: bookingTypes,
