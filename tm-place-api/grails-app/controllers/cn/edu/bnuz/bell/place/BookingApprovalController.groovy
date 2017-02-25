@@ -18,23 +18,19 @@ class BookingApprovalController implements ServiceExceptionHandler {
         def offset = params.int("offset") ?: 0
         def max = params.int("max") ?: (params.int("offset") ? 20 : Integer.MAX_VALUE)
 
-        def counts = bookingApprovalService.getCounts(approverId)
-        def forms
         switch (status) {
             case 'PENDING':
-                forms = bookingApprovalService.findPendingForms(approverId, offset, max)
+                return renderJson(bookingApprovalService.findPendingForms(approverId, offset, max))
                 break
             case 'PROCESSED':
-                forms = bookingApprovalService.findProcessedForms(approverId, offset, max)
+                return renderJson(bookingApprovalService.findProcessedForms(approverId, offset, max))
                 break
             case 'UNCHECKED':
-                forms = bookingApprovalService.findUncheckedForms(approverId, offset, max)
+                return renderJson(bookingApprovalService.findUncheckedForms(approverId, offset, max))
                 break
             default:
                 throw new BadRequestException()
         }
-
-        renderJson([counts: counts, forms: forms])
     }
 
     def show(String approverId, Long bookingApprovalId, String id) {

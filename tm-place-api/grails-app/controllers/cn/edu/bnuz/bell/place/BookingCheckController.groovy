@@ -11,26 +11,21 @@ import org.springframework.security.access.prepost.PreAuthorize
 @PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_CHECK")')
 class BookingCheckController implements ServiceExceptionHandler {
     BookingCheckService bookingCheckService
+    BookingReviewerService bookingReviewerService
 
     def index(String checkerId) {
         def status = params.status
         def offset = params.int("offset") ?: 0
         def max = params.int("max") ?: (params.int("offset") ? 20 : Integer.MAX_VALUE)
-
-        def counts = bookingCheckService.getCounts(checkerId)
-        def forms
         switch (status) {
             case 'PENDING':
-                forms = bookingCheckService.findPendingForms(checkerId, offset, max)
-                break
+                return renderJson(bookingCheckService.findPendingForms(checkerId, offset, max))
             case 'PROCESSED':
-                forms = bookingCheckService.findProcessedForms(checkerId, offset, max)
+                return renderJson(bookingCheckService.findProcessedForms(checkerId, offset, max))
                 break
             default:
                 throw new BadRequestException()
         }
-
-        renderJson([counts: counts, forms: forms])
     }
 
     def show(String checkerId, Long bookingCheckId, String id) {
@@ -64,6 +59,6 @@ class BookingCheckController implements ServiceExceptionHandler {
     }
 
     def approvers(String checkerId, Long bookingCheckId) {
-        renderJson bookingCheckService.getApprovers()
+        renderJson bookingReviewerService.getApprovers()
     }
 }

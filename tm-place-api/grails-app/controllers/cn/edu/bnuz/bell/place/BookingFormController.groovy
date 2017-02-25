@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 @PreAuthorize('hasAuthority("PERM_PLACE_BOOKING_WRITE")')
 class BookingFormController implements ServiceExceptionHandler {
     BookingFormService bookingFormService
+    BookingReviewerService bookingReviewerService
     SecurityService securityService
 
     def index(String userId) {
@@ -100,6 +101,6 @@ class BookingFormController implements ServiceExceptionHandler {
      * @return 审核人
      */
     def checkers(Long bookingFormId) {
-        renderJson bookingFormService.getCheckers(bookingFormId)
+        renderJson bookingReviewerService.getCheckers(bookingFormId)
     }
 }
