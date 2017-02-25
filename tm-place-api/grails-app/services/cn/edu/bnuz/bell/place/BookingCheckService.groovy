@@ -1,13 +1,17 @@
 package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.BadRequestException
-import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.organization.Student
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.service.DataAccessService
-import cn.edu.bnuz.bell.workflow.*
+import cn.edu.bnuz.bell.workflow.Activities
+import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
+import cn.edu.bnuz.bell.workflow.State
+import cn.edu.bnuz.bell.workflow.WorkflowActivity
+import cn.edu.bnuz.bell.workflow.WorkflowInstance
+import cn.edu.bnuz.bell.workflow.Workitem
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import grails.transaction.Transactional
@@ -16,7 +20,7 @@ import org.hibernate.SessionFactory
 import javax.persistence.ParameterMode
 
 @Transactional
-class BookingCheckService extends AbstractReviewService {
+class BookingCheckService {
     static final CHECK_ACTIVITY = "${BookingForm.WORKFLOW_ID}.${Activities.CHECK}"
 
     BookingFormService bookingFormService
@@ -53,7 +57,7 @@ where exists (
     }
 
     def findPendingForms(String userId, int offset, int max) {
-        BookingForm.executeQuery '''
+        def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
   user.id as userId,
@@ -73,10 +77,12 @@ and auth.checker.id = :userId
 and form.status = :status
 order by form.dateSubmitted
 ''',[userId: userId, status: State.SUBMITTED], [offset: offset, max: max]
+
+        return [forms: forms, counts: getCounts(userId)]
     }
 
     def findProcessedForms(String userId, int offset, int max) {
-        BookingForm.executeQuery '''
+        def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
   user.id as userId,
@@ -99,6 +105,8 @@ where exists (
 )
 order by form.dateChecked desc
 ''',[userId: userId, activityId: CHECK_ACTIVITY], [offset: offset, max: max]
+
+        return [forms: forms, counts: getCounts(userId)]
     }
 
     def getFormForReview(String userId, Long id, String activity) {
@@ -109,23 +117,20 @@ order by form.dateChecked desc
                 WorkflowActivity.load("${BookingForm.WORKFLOW_ID}.${activity}"),
                 User.load(userId),
         )
-        if (workitem) {
-            form.workitemId = workitem.id
-        }
-        checkReviewer(id, activity, userId)
+        domainStateMachineHandler.checkReviewer(id, userId, activity)
 
         form.extraInfo = getUserExtraInfo(form)
-        return form
+        return [form: form, counts: getCounts(userId), workitemId: workitem ? workitem.id : null]
     }
 
     def getFormForReview(String userId, Long id, UUID workitemId) {
         def form = bookingFormService.getFormInfo(id)
 
         def activity = Workitem.get(workitemId).activitySuffix
-        checkReviewer(id, activity, userId)
+        domainStateMachineHandler.checkReviewer(id, userId, activity)
 
         form.extraInfo = getUserExtraInfo(form)
-        return form
+        return [form: form, counts: getCounts(userId)]
     }
 
     def getUserExtraInfo(Map form) {
@@ -155,6 +160,9 @@ order by form.dateChecked desc
      * @return 是否通过检查 - true：无占用；false：有占用
      */
     def checkOccupation(BookingForm form) {
+        if (!form) {
+            throw new BadRequestException()
+        }
 
         def session = sessionFactory.currentSession
         def query = session.createStoredProcedureCall('tm.sp_find_booking_conflict')
@@ -179,28 +187,11 @@ order by form.dateChecked desc
     void accept(String userId, AcceptCommand cmd, UUID workitemId) {
         BookingForm form = BookingForm.get(cmd.id)
 
-        if (!form) {
-            throw new NotFoundException()
-        }
-
-        if (!domainStateMachineHandler.canAccept(form)) {
-            throw new BadRequestException()
-        }
-
-        def workitem = Workitem.get(workitemId)
-        def activity = workitem.activitySuffix
-        if (activity != Activities.CHECK ||  workitem.dateProcessed || workitem.to.id != userId ) {
-            throw new BadRequestException()
-        }
-
-        checkReviewer(cmd.id, activity, userId)
-
         if (!checkOccupation(form)) {
             return
         }
 
-        domainStateMachineHandler.accept(form, userId, cmd.comment, workitemId, cmd.to)
-
+        domainStateMachineHandler.accept(form, userId, Activities.CHECK, cmd.comment, workitemId, cmd.to)
         form.checker = Teacher.load(userId)
         form.dateChecked = new Date()
         form.save()
@@ -208,36 +199,9 @@ order by form.dateChecked desc
 
     void reject(String userId, RejectCommand cmd, UUID workitemId) {
         BookingForm form = BookingForm.get(cmd.id)
-
-        if (!form) {
-            throw new NotFoundException()
-        }
-
-        if (!domainStateMachineHandler.canReject(form)) {
-            throw new BadRequestException()
-        }
-
-        def activity = Workitem.get(workitemId).activitySuffix
-        checkReviewer(cmd.id, activity, userId)
-
-        domainStateMachineHandler.reject(form, userId, cmd.comment, workitemId)
-
+        domainStateMachineHandler.reject(form, userId, Activities.CHECK, cmd.comment, workitemId)
+        form.checker = Teacher.load(userId)
+        form.dateChecked = new Date()
         form.save()
-    }
-
-    @Override
-    List<Map> getReviewers(String activity, Long id) {
-        switch (activity) {
-            case Activities.CHECK:
-                return bookingFormService.getCheckers(id)
-            case Activities.APPROVE:
-                return getApprovers()
-            default:
-                throw new BadRequestException()
-        }
-    }
-
-    def getApprovers() {
-        User.findAllWithPermission('PERM_PLACE_BOOKING_APPROVE')
     }
 }

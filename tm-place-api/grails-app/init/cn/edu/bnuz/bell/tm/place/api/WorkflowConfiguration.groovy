@@ -1,9 +1,10 @@
 package cn.edu.bnuz.bell.tm.place.api
 
+import cn.edu.bnuz.bell.place.BookingReviewerService
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
 import cn.edu.bnuz.bell.workflow.Event
-import cn.edu.bnuz.bell.workflow.StateObject
 import cn.edu.bnuz.bell.workflow.State
+import cn.edu.bnuz.bell.workflow.StateObject
 import cn.edu.bnuz.bell.workflow.config.DefaultStateMachineConfiguration
 import cn.edu.bnuz.bell.workflow.config.DefaultStateMachinePersistConfiguration
 import org.springframework.context.annotation.Bean
@@ -18,7 +19,8 @@ class WorkflowConfiguration {
     @Bean
     DomainStateMachineHandler domainStateMachineHandler(
             StateMachine<State, Event> stateMachine,
-            StateMachinePersister<State, Event, StateObject> persister) {
-        new DomainStateMachineHandler(stateMachine, persister)
+            StateMachinePersister<State, Event, StateObject> persister,
+            BookingReviewerService bookingReviewerService) {
+        new DomainStateMachineHandler(stateMachine, persister, bookingReviewerService)
     }
 }

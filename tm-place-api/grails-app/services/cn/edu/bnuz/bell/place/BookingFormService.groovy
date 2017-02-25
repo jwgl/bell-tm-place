@@ -437,21 +437,6 @@ order by place.type
         }
     }
 
-    def getCheckers(Long id) {
-        BookingAuth.executeQuery '''
-select new map(
-  checker.id as id,
-  checker.name as name
-)
-from BookingAuth bc
-join bc.checker checker
-where (bc.type, bc.department) in (
-  select form.type, form.department
-  from BookingForm form
-  where form.id = :id
-)''', [id: id]
-    }
-
     def export(String userId, Date start, Date end) {
         BookingForm.executeQuery '''
 select new map(

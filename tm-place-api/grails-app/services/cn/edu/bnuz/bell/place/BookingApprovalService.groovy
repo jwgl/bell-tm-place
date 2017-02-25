@@ -5,8 +5,8 @@ import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.State
-import cn.edu.bnuz.bell.workflow.Workitem
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
+import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
 import grails.transaction.Transactional
 
@@ -36,7 +36,7 @@ where exists (
     }
 
     def findUncheckedForms(String userId, int offset, int max) {
-        BookingForm.executeQuery '''
+        def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
   user.id as userId,
@@ -51,12 +51,14 @@ join form.user user
 join form.type type
 join form.department dept
 where form.status = :status
-order by form.dateModified
+order by form.dateSubmitted desc
 ''',[status: State.SUBMITTED], [offset: offset, max: max]
+
+        return [forms: forms, counts: getCounts(userId)]
     }
 
     def findPendingForms(String userId, int offset, int max) {
-        BookingForm.executeQuery '''
+        def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
   user.id as userId,
@@ -73,10 +75,12 @@ join form.department dept
 where form.status = :status
 order by form.dateChecked
 ''',[status: State.CHECKED], [offset: offset, max: max]
+
+        return [forms: forms, counts: getCounts(userId)]
     }
 
     def findProcessedForms(String userId, int offset, int max) {
-        BookingForm.executeQuery '''
+        def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
   user.id as userId,
@@ -100,36 +104,22 @@ where exists (
 )
 order by form.dateApproved desc
 ''',[userId: userId, activityId: APPROVE_ACTIVITY], [offset: offset, max: max]
+
+        return [forms: forms, counts: getCounts(userId)]
     }
 
     void accept(String userId, AcceptCommand cmd, UUID workitemId) {
         BookingForm form = BookingForm.get(cmd.id)
 
-        if (!form) {
-            throw new NotFoundException()
-        }
-
-        if (!domainStateMachineHandler.canAccept(form)) {
-            throw new BadRequestException()
-        }
-
-        def workitem = Workitem.get(workitemId)
-        def activity = workitem.activitySuffix
-        if (activity != Activities.APPROVE ||  workitem.dateProcessed || workitem.to.id != userId) {
-            throw new BadRequestException()
-        }
-
-        checkReviewer(cmd.id, activity, userId)
-
         if (!checkOccupation(form)) {
             return
         }
 
-        domainStateMachineHandler.accept(form, userId, cmd.comment, workitemId, cmd.to)
-
+        domainStateMachineHandler.accept(form, userId, Activities.APPROVE, cmd.comment, workitemId, cmd.to)
         form.approver = Teacher.load(userId)
         form.dateApproved = new Date()
         form.save()
+
         insertSyncForm(form.id)
     }
 
@@ -178,6 +168,14 @@ where checker.id = form.checker.id
         }
     }
 
+    void reject(String userId, RejectCommand cmd, UUID workitemId) {
+        BookingForm form = BookingForm.get(cmd.id)
+        domainStateMachineHandler.reject(form, userId, Activities.APPROVE, cmd.comment, workitemId)
+        form.approver = Teacher.load(userId)
+        form.dateApproved = new Date()
+        form.save()
+    }
+
     void revoke(String userId, RevokeCommand cmd) {
         BookingForm form = BookingForm.get(cmd.id)
 
@@ -189,7 +187,7 @@ where checker.id = form.checker.id
             throw new BadRequestException()
         }
 
-        checkReviewer(cmd.id, Activities.APPROVE, userId)
+        domainStateMachineHandler.checkReviewer(cmd.id, userId, Activities.APPROVE)
 
         domainStateMachineHandler.revoke(form, userId, cmd.comment)
 
