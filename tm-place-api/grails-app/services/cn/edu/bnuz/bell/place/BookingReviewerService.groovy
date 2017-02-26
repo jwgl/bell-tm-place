@@ -19,7 +19,7 @@ class BookingReviewerService implements ReviewerProvider{
         }
     }
 
-    def getCheckers(Long id) {
+    List<Map> getCheckers(Long id) {
         BookingAuth.executeQuery '''
 select new map(
   checker.id as id,
@@ -34,7 +34,7 @@ where (bc.type, bc.department) in (
 )''', [id: id]
     }
 
-    def getApprovers() {
+    List<Map> getApprovers() {
         User.findAllWithPermission('PERM_PLACE_BOOKING_APPROVE')
     }
 }

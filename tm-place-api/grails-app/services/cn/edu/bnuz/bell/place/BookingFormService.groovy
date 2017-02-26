@@ -31,7 +31,7 @@ class BookingFormService {
      * @return 申请单列表
      */
     def list(String userId, Integer offset, Integer max) {
-        BookingForm.executeQuery '''
+        def forms = BookingForm.executeQuery '''
 select new map(
   bf.id as id,
   bd.name as department,
@@ -52,15 +52,14 @@ left join bf.approver ap
 where bf.user.id = :userId
 order by bf.dateModified desc
 ''', [userId: userId], [offset: offset, max: max]
-    }
 
-    /**
-     * 获取用户申请单数量
-     * @param userId 用户ID
-     * @return 数量
-     */
-    def formCount(String userId) {
-        BookingForm.countByUser(User.load(userId))
+        return [
+                forms: forms,
+                count: BookingForm.countByUser(User.load(userId)),
+                user: [
+                        phoneNumber: User.get(userId).longPhone != null
+                ],
+        ]
     }
 
     def getFormInfo(Long id) {

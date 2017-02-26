@@ -12,22 +12,10 @@ import grails.transaction.Transactional
 
 @Transactional
 class BookingApprovalService extends BookingCheckService {
-    static final APPROVE_ACTIVITY = "${BookingForm.WORKFLOW_ID}.${Activities.APPROVE}"
-
     def getCounts(String userId) {
         def unchecked = BookingForm.countByStatus(State.SUBMITTED)
         def pending = BookingForm.countByStatus(State.CHECKED)
-        def processed = dataAccessService.getInteger '''
-select count(*)
-from BookingForm form
-where exists (
-  from Workitem workitem
-  where workitem.instance = form.workflowInstance
-  and workitem.to.id = :userId
-  and workitem.activity.id = :activityId
-  and workitem.dateProcessed is not null
-)
-''',[userId: userId, activityId: APPROVE_ACTIVITY]
+        def processed = BookingForm.countByApprover(Teacher.load(userId))
         return [
                 UNCHECKED: unchecked,
                 PENDING: pending,
@@ -95,15 +83,9 @@ from BookingForm form
 join form.user user
 join form.type type
 join form.department dept
-where exists (
-  from Workitem workitem
-  where workitem.instance = form.workflowInstance
-  and workitem.to.id = :userId
-  and workitem.activity.id = :activityId
-  and workitem.dateProcessed is not null
-)
+where form.approver.id = :approverId
 order by form.dateApproved desc
-''',[userId: userId, activityId: APPROVE_ACTIVITY], [offset: offset, max: max]
+''',[approverId: userId], [offset: offset, max: max]
 
         return [forms: forms, counts: getCounts(userId)]
     }
