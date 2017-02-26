@@ -2,7 +2,6 @@ package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.security.SecurityService
-import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.workflow.Event
 import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
 import org.springframework.security.access.prepost.PreAuthorize
@@ -14,18 +13,9 @@ class BookingFormController implements ServiceExceptionHandler {
     SecurityService securityService
 
     def index(String userId) {
-        def user = User.get(userId)
         def offset = params.int('offset') ?: 0
         def max = params.int('max') ?: 10
-        def count = bookingFormService.formCount(userId)
-        def forms = bookingFormService.list(userId, offset, max)
-        renderJson([
-                user: [
-                        phoneNumber: user.longPhone != null
-                ],
-                count: count,
-                forms: forms,
-        ])
+        renderJson bookingFormService.list(userId, offset, max)
     }
 
     def show(String userId, Long id) {

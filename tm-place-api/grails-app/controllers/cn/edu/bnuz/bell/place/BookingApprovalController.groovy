@@ -21,13 +21,10 @@ class BookingApprovalController implements ServiceExceptionHandler {
         switch (status) {
             case 'PENDING':
                 return renderJson(bookingApprovalService.findPendingForms(approverId, offset, max))
-                break
             case 'PROCESSED':
                 return renderJson(bookingApprovalService.findProcessedForms(approverId, offset, max))
-                break
             case 'UNCHECKED':
                 return renderJson(bookingApprovalService.findUncheckedForms(approverId, offset, max))
-                break
             default:
                 throw new BadRequestException()
         }
