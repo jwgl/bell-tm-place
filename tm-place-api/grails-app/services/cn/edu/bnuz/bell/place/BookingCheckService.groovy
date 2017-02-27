@@ -8,6 +8,8 @@ import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.service.DataAccessService
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
+import cn.edu.bnuz.bell.workflow.ListCommand
+import cn.edu.bnuz.bell.workflow.ListType
 import cn.edu.bnuz.bell.workflow.State
 import cn.edu.bnuz.bell.workflow.WorkflowActivity
 import cn.edu.bnuz.bell.workflow.WorkflowInstance
@@ -29,7 +31,7 @@ class BookingCheckService {
     SessionFactory sessionFactory
 
     def getCounts(String userId) {
-        def pending = dataAccessService.getInteger '''
+        def todo = dataAccessService.getInteger '''
 select count(*)
 from BookingForm form
 join form.type type
@@ -39,7 +41,8 @@ where auth.department = dept
 and auth.checker.id = :userId
 and form.status = :status
 ''',[userId: userId, status: State.SUBMITTED]
-        def processed = dataAccessService.getInteger '''
+
+        def done = dataAccessService.getInteger '''
 select count(*)
 from BookingForm form
 where exists (
@@ -50,13 +53,25 @@ where exists (
   and workitem.dateProcessed is not null
 )
 ''',[userId: userId, activityId: CHECK_ACTIVITY]
-        return [
-                PENDING: pending,
-                PROCESSED: processed,
+
+        [
+                (ListType.TODO): todo,
+                (ListType.DONE): done,
         ]
     }
 
-    def findPendingForms(String userId, int offset, int max) {
+    def list(String userId, ListCommand cmd) {
+        switch (cmd.type) {
+            case ListType.TODO:
+                return findTodoList(userId, cmd.args)
+            case ListType.DONE:
+                return findDoneList(userId, cmd.args)
+            default:
+                throw new BadRequestException()
+        }
+    }
+
+    def findTodoList(String userId, Map args) {
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
@@ -76,12 +91,12 @@ where auth.department = dept
 and auth.checker.id = :userId
 and form.status = :status
 order by form.dateSubmitted
-''',[userId: userId, status: State.SUBMITTED], [offset: offset, max: max]
+''',[userId: userId, status: State.SUBMITTED], args
 
         return [forms: forms, counts: getCounts(userId)]
     }
 
-    def findProcessedForms(String userId, int offset, int max) {
+    def findDoneList(String userId, Map args) {
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
@@ -104,7 +119,7 @@ where exists (
   and workitem.dateProcessed is not null
 )
 order by form.dateChecked desc
-''',[userId: userId, activityId: CHECK_ACTIVITY], [offset: offset, max: max]
+''',[userId: userId, activityId: CHECK_ACTIVITY], args
 
         return [forms: forms, counts: getCounts(userId)]
     }
@@ -120,7 +135,11 @@ order by form.dateChecked desc
         domainStateMachineHandler.checkReviewer(id, userId, activity)
 
         form.extraInfo = getUserExtraInfo(form)
-        return [form: form, counts: getCounts(userId), workitemId: workitem ? workitem.id : null]
+        return [
+                form: form,
+                counts: getCounts(userId),
+                workitemId: workitem ? workitem.id : null,
+        ]
     }
 
     def getFormForReview(String userId, Long id, UUID workitemId) {
@@ -130,7 +149,11 @@ order by form.dateChecked desc
         domainStateMachineHandler.checkReviewer(id, userId, activity)
 
         form.extraInfo = getUserExtraInfo(form)
-        return [form: form, counts: getCounts(userId)]
+        return [
+                form: form,
+                counts: getCounts(userId),
+                workitemId: workitemId,
+        ]
     }
 
     def getUserExtraInfo(Map form) {

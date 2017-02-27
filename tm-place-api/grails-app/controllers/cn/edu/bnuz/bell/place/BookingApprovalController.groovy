@@ -4,6 +4,7 @@ import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.Event
+import cn.edu.bnuz.bell.workflow.ListCommand
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
@@ -13,21 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize
 class BookingApprovalController implements ServiceExceptionHandler {
     BookingApprovalService bookingApprovalService
 
-    def index(String approverId) {
-        def status = params.status
-        def offset = params.int("offset") ?: 0
-        def max = params.int("max") ?: (params.int("offset") ? 20 : Integer.MAX_VALUE)
-
-        switch (status) {
-            case 'PENDING':
-                return renderJson(bookingApprovalService.findPendingForms(approverId, offset, max))
-            case 'PROCESSED':
-                return renderJson(bookingApprovalService.findProcessedForms(approverId, offset, max))
-            case 'UNCHECKED':
-                return renderJson(bookingApprovalService.findUncheckedForms(approverId, offset, max))
-            default:
-                throw new BadRequestException()
-        }
+    def index(String approverId, ListCommand cmd) {
+        renderJson bookingApprovalService.list(approverId, cmd)
     }
 
     def show(String approverId, Long bookingApprovalId, String id) {
