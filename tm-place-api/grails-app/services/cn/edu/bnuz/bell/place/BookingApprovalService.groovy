@@ -39,11 +39,12 @@ class BookingApprovalService extends BookingCheckService {
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
-  user.id as userId,
-  user.name as userName,
-  form.dateChecked as date,
   dept.name as department,
   type.name as type,
+  user.id as userId,
+  user.name as userName,
+  form.reason as reason,
+  form.dateChecked as date,
   form.status as status
 )
 from BookingForm form
@@ -61,11 +62,12 @@ order by form.dateChecked
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
-  user.id as userId,
-  user.name as userName,
-  form.dateApproved as date,
   dept.name as department,
   type.name as type,
+  user.id as userId,
+  user.name as userName,
+  form.reason as reason,
+  form.dateApproved as date,
   form.status as status,
   form.report.id as reportId
 )
@@ -73,9 +75,9 @@ from BookingForm form
 join form.user user
 join form.type type
 join form.department dept
-where form.approver.id = :approverId
+where form.approver.id = :userId
 order by form.dateApproved desc
-''',[approverId: userId], args
+''',[userId: userId], args
 
         return [forms: forms, counts: getCounts(userId)]
     }
@@ -84,11 +86,12 @@ order by form.dateApproved desc
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
-  user.id as userId,
-  user.name as userName,
-  form.dateSubmitted as date,
   dept.name as department,
   type.name as type,
+  user.id as userId,
+  user.name as userName,
+  form.reason as reason,
+  form.dateSubmitted as date,
   form.status as status
 )
 from BookingForm form
@@ -100,6 +103,65 @@ order by form.dateSubmitted desc
 ''',[status: State.SUBMITTED], args
 
         return [forms: forms, counts: getCounts(userId)]
+    }
+
+    Long getPrevReviewId(String userId, Long id, ListType type) {
+        switch (type) {
+            case ListType.TODO:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.status = :status
+and form.dateChecked < (select dateChecked from BookingForm where id = :id)
+order by form.dateChecked desc
+''', [id: id, status: State.CHECKED])
+            case ListType.DONE:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.approver.id = :userId
+and form.dateApproved > (select dateApproved from BookingForm where id = :id)
+order by form.dateApproved asc
+''', [userId: userId, id: id])
+            case ListType.TOBE:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.status = :status
+and form.dateSubmitted > (select dateSubmitted from BookingForm where id = :id)
+order by form.dateSubmitted asc
+''', [id: id, status: State.SUBMITTED])
+
+        }
+    }
+
+    Long getNextReviewId(String userId, Long id, ListType type) {
+        switch (type) {
+            case ListType.TODO:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.status = :status
+and form.dateChecked > (select dateChecked from BookingForm where id = :id)
+order by form.dateChecked asc
+''', [id: id, status: State.CHECKED])
+            case ListType.DONE:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.approver.id = :userId
+and form.dateApproved < (select dateApproved from BookingForm where id = :id)
+order by form.dateApproved desc
+''', [userId: userId, id: id])
+            case ListType.TOBE:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.status = :status
+and form.dateSubmitted < (select dateSubmitted from BookingForm where id = :id)
+order by form.dateSubmitted desc
+''', [id: id, status: State.SUBMITTED])
+        }
     }
 
     void accept(String userId, AcceptCommand cmd, UUID workitemId) {

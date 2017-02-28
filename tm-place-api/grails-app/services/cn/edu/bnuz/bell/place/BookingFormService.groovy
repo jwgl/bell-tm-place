@@ -38,17 +38,11 @@ select new map(
   bt.name as type,
   bf.reason as reason,
   bf.dateModified as dateModified,
-  ck.name as checker,
-  bf.dateChecked as dateChecked,
-  ap.name as approver,
-  bf.dateApproved as dateApproved,
   bf.status as status
 )
 from BookingForm bf
 join bf.department bd
 join bf.type bt
-left join bf.checker ck
-left join bf.approver ap
 where bf.user.id = :userId
 order by bf.dateModified desc
 ''', [userId: userId], [offset: offset, max: max]

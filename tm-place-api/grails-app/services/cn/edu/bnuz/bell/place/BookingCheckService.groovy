@@ -75,11 +75,12 @@ where exists (
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
+  dept.name as department,
+  type.name as type,
   user.id as userId,
   user.name as userName,
-  dept.name as department,
+  form.reason as reason,
   form.dateSubmitted as date,
-  type.name as type,
   form.status as status
 )
 from BookingForm form
@@ -100,31 +101,27 @@ order by form.dateSubmitted
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
+  dept.name as department,
+  type.name as type,
   user.id as userId,
   user.name as userName,
-  dept.name as department,
+  form.reason as reason,
   form.dateChecked as date,
-  type.name as type,
   form.status as status
 )
 from BookingForm form
 join form.user user
 join form.type type
 join form.department dept
-where exists (
-  from Workitem workitem
-  where workitem.instance = form.workflowInstance
-  and workitem.to.id = :userId
-  and workitem.activity.id = :activityId
-  and workitem.dateProcessed is not null
-)
+where form.checker.id = :userId
+and form.status <> :status
 order by form.dateChecked desc
-''',[userId: userId, activityId: CHECK_ACTIVITY], args
+''',[userId: userId, status: State.SUBMITTED], args
 
         return [forms: forms, counts: getCounts(userId)]
     }
 
-    def getFormForReview(String userId, Long id, String activity) {
+    def getFormForReview(String userId, Long id, ListType type, String activity) {
         def form = bookingFormService.getFormInfo(id)
 
         def workitem = Workitem.findByInstanceAndActivityAndToAndDateProcessedIsNull(
@@ -139,10 +136,12 @@ order by form.dateChecked desc
                 form: form,
                 counts: getCounts(userId),
                 workitemId: workitem ? workitem.id : null,
+                prevId: getPrevReviewId(userId, id, type),
+                nextId: getNextReviewId(userId, id, type),
         ]
     }
 
-    def getFormForReview(String userId, Long id, UUID workitemId) {
+    def getFormForReview(String userId, Long id, ListType type, UUID workitemId) {
         def form = bookingFormService.getFormInfo(id)
 
         def activity = Workitem.get(workitemId).activitySuffix
@@ -153,7 +152,64 @@ order by form.dateChecked desc
                 form: form,
                 counts: getCounts(userId),
                 workitemId: workitemId,
+                prevId: getPrevReviewId(userId, id, type),
+                nextId: getNextReviewId(userId, id, type),
         ]
+    }
+
+    Long getPrevReviewId(String userId, Long id, ListType type) {
+        switch (type) {
+            case ListType.TODO:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+join form.type type
+join form.department dept
+join type.auths auth
+where auth.department = dept
+and auth.checker.id = :userId
+and form.status = :status
+and form.dateSubmitted < (select dateSubmitted from BookingForm where id = :id)
+order by form.dateSubmitted desc
+''', [userId: userId, id: id, status: State.SUBMITTED])
+            case ListType.DONE:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.checker.id = :userId
+and form.status <> :status
+and form.dateChecked > (select dateChecked from BookingForm where id = :id)
+order by form.dateChecked asc
+''', [userId: userId, id: id, status: State.SUBMITTED])
+        }
+    }
+
+    Long getNextReviewId(String userId, Long id, ListType type) {
+        switch (type) {
+            case ListType.TODO:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+join form.user user
+join form.type type
+join form.department dept
+join type.auths auth
+where auth.department = dept
+and auth.checker.id = :userId
+and form.status = :status
+and form.dateSubmitted > (select dateSubmitted from BookingForm where id = :id)
+order by form.dateSubmitted asc
+''', [userId: userId, id: id, status: State.SUBMITTED])
+            case ListType.DONE:
+                return dataAccessService.getLong('''
+select form.id
+from BookingForm form
+where form.checker.id = :userId
+and form.status <> :status
+and form.dateChecked < (select dateChecked from BookingForm where id = :id)
+order by form.dateChecked desc
+''', [userId: userId, id: id, status: State.SUBMITTED])
+        }
     }
 
     def getUserExtraInfo(Map form) {

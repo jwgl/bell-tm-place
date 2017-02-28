@@ -5,6 +5,7 @@ import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.Event
 import cn.edu.bnuz.bell.workflow.ListCommand
+import cn.edu.bnuz.bell.workflow.ListType
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
@@ -18,11 +19,12 @@ class BookingApprovalController implements ServiceExceptionHandler {
         renderJson bookingApprovalService.list(approverId, cmd)
     }
 
-    def show(String approverId, Long bookingApprovalId, String id) {
+    def show(String approverId, Long bookingApprovalId, String id, String type) {
+        ListType listType = Enum.valueOf(ListType, type)
         if (id == 'undefined') {
-            renderJson bookingApprovalService.getFormForReview(approverId, bookingApprovalId, Activities.APPROVE)
+            renderJson bookingApprovalService.getFormForReview(approverId, bookingApprovalId, listType, Activities.APPROVE)
         } else {
-            renderJson bookingApprovalService.getFormForReview(approverId, bookingApprovalId, UUID.fromString(id))
+            renderJson bookingApprovalService.getFormForReview(approverId, bookingApprovalId, listType, UUID.fromString(id))
         }
     }
 
@@ -51,6 +53,6 @@ class BookingApprovalController implements ServiceExceptionHandler {
                 throw new BadRequestException()
         }
 
-        show(approverId, bookingApprovalId, id)
+        show(approverId, bookingApprovalId, id, 'todo')
     }
 }
