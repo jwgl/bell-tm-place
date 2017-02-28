@@ -5,6 +5,7 @@ import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.Event
 import cn.edu.bnuz.bell.workflow.ListCommand
+import cn.edu.bnuz.bell.workflow.ListType
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import org.springframework.security.access.prepost.PreAuthorize
@@ -18,11 +19,12 @@ class BookingCheckController implements ServiceExceptionHandler {
         renderJson bookingCheckService.list(checkerId, cmd)
     }
 
-    def show(String checkerId, Long bookingCheckId, String id) {
+    def show(String checkerId, Long bookingCheckId, String id, String type) {
+        ListType listType = ListType.valueOf(type)
         if (id == 'undefined') {
-            renderJson bookingCheckService.getFormForReview(checkerId, bookingCheckId, Activities.CHECK)
+            renderJson bookingCheckService.getFormForReview(checkerId, bookingCheckId, listType, Activities.CHECK)
         } else {
-            renderJson bookingCheckService.getFormForReview(checkerId, bookingCheckId, UUID.fromString(id))
+            renderJson bookingCheckService.getFormForReview(checkerId, bookingCheckId, listType, UUID.fromString(id))
         }
     }
 
@@ -45,7 +47,7 @@ class BookingCheckController implements ServiceExceptionHandler {
                 throw new BadRequestException()
         }
 
-        show(checkerId, bookingCheckId, id)
+        show(checkerId, bookingCheckId, id, 'todo')
     }
 
     def approvers(String checkerId, Long bookingCheckId) {
