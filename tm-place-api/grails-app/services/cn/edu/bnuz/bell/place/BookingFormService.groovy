@@ -35,7 +35,7 @@ class BookingFormService {
 select new map(
   bf.id as id,
   bd.name as department,
-  bt.name as qtype,
+  bt.name as type,
   bf.reason as reason,
   bf.dateModified as dateModified,
   bf.status as status
