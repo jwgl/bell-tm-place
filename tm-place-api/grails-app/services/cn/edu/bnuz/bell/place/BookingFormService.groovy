@@ -56,7 +56,7 @@ order by bf.dateModified desc
         ]
     }
 
-    def getFormInfo(Long id) {
+    Map getFormInfo(Long id) {
         def results = BookingForm.executeQuery '''
 select new map(
   form.id as id,
@@ -229,9 +229,9 @@ where item.form.id = :formId
 select distinct new Map(dept.id as id, dept.name as name)
 from BookingAuth bc
 join bc.department dept
-where dept.id = :departmentId or dept.isTeaching = false
+where dept.id = :departmentId or dept.isTeaching = false or :advancedUser = true
 order by dept.id
-''', [departmentId: departmentId]
+''', [departmentId: departmentId, advancedUser: advancedUser]
     }
 
     /**
@@ -251,27 +251,48 @@ order by checker, name
 ''', [departmentId: departmentId]
     }
 
+    /**
+     * 根据用户类别获取可借用天数
+     * @param userType 用户类别
+     * @return 可借用天数
+     */
     private getBookingDays(UserType userType) {
+        if (advancedUser) {
+            return -1
+        }
+
         if (userType == UserType.TEACHER) {
-            if (securityService.hasRole('ROLE_BOOKING_ADV_USER')) {
-                return -1
-            } else {
-                0
-            }
+            return 0
         } else {
             return 14
         }
     }
 
+    /**
+     * 获取指定用户类型的借用类型
+     * @param userType 用户类型
+     * @return 借用类型列表
+     */
     def getPlaceTypes(UserType userType) {
         // TODO: 考虑允许学期和部门
-        Place.executeQuery '''
+        if (advancedUser) {
+            PlaceUserType.executeQuery '''
+select distinct place.type
+from PlaceUserType put
+join put.place place
+order by place.type'''
+        } else {
+            PlaceUserType.executeQuery '''
 select distinct place.type
 from PlaceUserType put
 join put.place place
 where put.userType = :userType
-order by place.type
-''', [userType: userType]
+order by place.type''', [userType: userType]
+        }
+    }
+
+    private boolean isAdvancedUser() {
+        securityService.hasRole 'ROLE_BOOKING_ADV_USER'
     }
 
     /**
@@ -419,7 +440,8 @@ order by place.type
                     p_day_of_week: cmd.dayOfWeek,
                     p_section_id : cmd.sectionId,
                     p_place_type : cmd.placeType,
-                    p_user_type  : userType.id
+                    p_user_type  : userType.id,
+                    p_adv_user   : advancedUser,
             ].each { k, v ->
                 registerParameter(k, v.class, ParameterMode.IN).bindValue(v)
             }
