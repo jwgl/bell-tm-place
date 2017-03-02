@@ -1,6 +1,7 @@
 package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.BadRequestException
+import cn.edu.bnuz.bell.organization.Department
 import cn.edu.bnuz.bell.organization.Student
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
@@ -214,18 +215,29 @@ order by form.dateChecked desc
 
     def getUserExtraInfo(Map form) {
         def extraInfo = []
+        String formUserId = form.userId
+        String formDepartmentId = form.departmentId
 
         switch (form.userType) {
+            case UserType.VIRTUAL:
+                User user = User.get(formUserId)
+                if (user.departmentId != formDepartmentId) {
+                    Department department = Department.get(user.departmentId)
+                    if (department) {
+                        extraInfo << department.name
+                    }
+                }
+                break
             case UserType.STUDENT:
-                Student student = Student.get(form.userId)
-                if(student.department.id != form.departmentId) {
+                Student student = Student.get(formUserId)
+                if(student.department.id != formDepartmentId) {
                     extraInfo << student.department.name
                 }
                 extraInfo << student.adminClass.name
                 break
             case UserType.TEACHER:
-                Teacher teacher = Teacher.get(form.userId)
-                if(teacher.department.id != form.departmentId) {
+                Teacher teacher = Teacher.get(formUserId)
+                if(teacher.department.id != formDepartmentId) {
                     extraInfo << teacher.department.name
                 }
                 break
