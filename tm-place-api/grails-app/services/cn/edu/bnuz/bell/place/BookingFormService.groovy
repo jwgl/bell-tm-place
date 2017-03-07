@@ -8,7 +8,7 @@ import cn.edu.bnuz.bell.organization.Department
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.security.UserType
-import cn.edu.bnuz.bell.tm.common.master.TermService
+import cn.edu.bnuz.bell.master.TermService
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
 import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
 import grails.transaction.Transactional
