@@ -1,8 +1,10 @@
 package cn.edu.bnuz.bell.tm.place.api
 
+import cn.edu.bnuz.bell.calendar.TermSwapDate
 import cn.edu.bnuz.bell.config.ExternalConfigLoader
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration
+import grails.converters.JSON
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient
 import org.springframework.context.EnvironmentAware
@@ -22,5 +24,15 @@ class Application extends GrailsAutoConfiguration implements EnvironmentAware {
     @Override
     void setEnvironment(Environment environment) {
         ExternalConfigLoader.load(environment)
+    }
+
+    @Override
+    void doWithApplicationContext() {
+        JSON.registerObjectMarshaller(TermSwapDate) {
+            [
+                    from: it.fromDate,
+                    to  : it.toDate,
+            ]
+        }
     }
 }
