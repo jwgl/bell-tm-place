@@ -31,7 +31,7 @@ class Application extends GrailsAutoConfiguration implements EnvironmentAware {
         JSON.registerObjectMarshaller(TermSwapDate) {
             [
                     from: it.fromDate,
-                    to  : it.toDate
+                    to  : it.toDate,
             ]
         }
     }
