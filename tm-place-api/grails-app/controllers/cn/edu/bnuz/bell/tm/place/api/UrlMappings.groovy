@@ -8,6 +8,7 @@ class UrlMappings {
                 "/checkers"(controller: 'bookingForm', action: 'checkers', method: 'GET')
                 collection {
                     "/places"(controller: 'bookingForm', action: 'places', method: 'GET')
+                    "/notice"(controller: 'bookingForm', action: 'notice', method: 'GET')
                 }
             }
         }
