@@ -85,6 +85,14 @@ class BookingFormController implements ServiceExceptionHandler {
     }
 
     /**
+     * 获取借用须知
+     * @return 借用须知
+     */
+    def notice() {
+        renderJson bookingFormService.getNotice()
+    }
+
+    /**
      * 获取审核人
      * @param userId
      * @param id

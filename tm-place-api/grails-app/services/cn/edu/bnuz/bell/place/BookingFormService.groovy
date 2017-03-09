@@ -9,6 +9,7 @@ import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.security.UserType
 import cn.edu.bnuz.bell.master.TermService
+import cn.edu.bnuz.bell.system.SystemConfigService
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
 import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
 import grails.transaction.Transactional
@@ -24,6 +25,7 @@ class BookingFormService {
     TermService termService
     SecurityService securityService
     DomainStateMachineHandler domainStateMachineHandler
+    SystemConfigService systemConfigService
 
     /**
      * 获取指定用户ID的申请单用于显示
@@ -53,6 +55,13 @@ order by bf.dateModified desc
                 user: [
                         phoneNumber: User.get(userId).longPhone != null
                 ],
+        ]
+    }
+
+    def getNotice() {
+        [
+                title: '教室借用须知',
+                content: systemConfigService.getString(BookingForm.CONFIG_NOTICE),
         ]
     }
 

@@ -129,4 +129,5 @@ class BookingForm implements StateObject {
     }
 
     static final WORKFLOW_ID = 'place.booking'
+    static final CONFIG_NOTICE = 'place.booking.notice'
 }
