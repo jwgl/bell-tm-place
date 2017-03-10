@@ -2,7 +2,6 @@ package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
-import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.Event
 import cn.edu.bnuz.bell.workflow.ListCommand
 import cn.edu.bnuz.bell.workflow.ListType
@@ -22,9 +21,10 @@ class BookingApprovalController implements ServiceExceptionHandler {
     def show(String approverId, Long bookingApprovalId, String id, String type) {
         ListType listType = Enum.valueOf(ListType, type)
         if (id == 'undefined') {
-            renderJson bookingApprovalService.getFormForReview(approverId, bookingApprovalId, listType, Activities.APPROVE)
+            String query = params.query == 'undefined' ? '' : params.query
+            renderJson bookingApprovalService.getFormForApproval(approverId, bookingApprovalId, listType, query)
         } else {
-            renderJson bookingApprovalService.getFormForReview(approverId, bookingApprovalId, listType, UUID.fromString(id))
+            renderJson bookingApprovalService.getFormForApproval(approverId, bookingApprovalId, listType, UUID.fromString(id))
         }
     }
 

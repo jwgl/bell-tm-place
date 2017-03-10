@@ -3,10 +3,15 @@ package cn.edu.bnuz.bell.place
 import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.organization.Teacher
+import cn.edu.bnuz.bell.security.User
+import cn.edu.bnuz.bell.service.DataAccessService
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.ListCommand
 import cn.edu.bnuz.bell.workflow.ListType
 import cn.edu.bnuz.bell.workflow.State
+import cn.edu.bnuz.bell.workflow.WorkflowActivity
+import cn.edu.bnuz.bell.workflow.WorkflowInstance
+import cn.edu.bnuz.bell.workflow.Workitem
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
@@ -14,28 +19,62 @@ import grails.transaction.Transactional
 
 @Transactional
 class BookingApprovalService extends BookingCheckService {
-    def getCounts(String userId) {
-        [
+    private getCounts(String userId, ListType type, String query) {
+        def counts = [
                 (ListType.TODO): BookingForm.countByStatus(State.CHECKED),
                 (ListType.DONE): BookingForm.countByApprover(Teacher.load(userId)),
                 (ListType.TOBE): BookingForm.countByStatus(State.SUBMITTED),
         ]
+
+        if (query) {
+            switch (type) {
+                case ListType.TODO:
+                    counts.(ListType.TODO) = dataAccessService.getLong '''
+select count(*)
+from BookingForm form
+join form.user user
+where form.status = :status
+and user.name like :query
+''', [status: State.CHECKED, query: query]
+                    break
+                case ListType.DONE:
+                    counts.(ListType.DONE) = dataAccessService.getLong '''
+select count(*)
+from BookingForm form
+join form.user user
+where form.approver.id = :userId
+and user.name like :query
+''', [userId: userId, query: query]
+                    break
+                case ListType.TOBE:
+                    counts.(ListType.TOBE) = dataAccessService.getLong '''
+select count(*)
+from BookingForm form
+join form.user user
+where form.status = :status
+and user.name like :query
+''', [status: State.SUBMITTED, query: query]
+                    break
+            }
+        }
+
+        return counts
     }
 
     def list(String userId, ListCommand cmd) {
-        switch (cmd.type) {
+         switch (cmd.type) {
             case ListType.TODO:
-                return findTodoList(userId, cmd.args)
+                return findTodoList(userId, cmd)
             case ListType.DONE:
-                return findDoneList(userId, cmd.args)
+                return findDoneList(userId, cmd)
             case ListType.TOBE:
-                return findTobeList(userId, cmd.args)
+                return findTobeList(userId, cmd)
             default:
                 throw new BadRequestException()
         }
     }
 
-    def findTodoList(String userId, Map args) {
+    def findTodoList(String userId, ListCommand cmd) {
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
@@ -52,13 +91,15 @@ join form.user user
 join form.type type
 join form.department dept
 where form.status = :status
+and user.name like :query
 order by form.dateChecked
-''',[status: State.CHECKED], args
+''', [status: State.CHECKED, query: cmd.query ?: '%'],
+     [offset: cmd.offset, max: cmd.max]
 
-        return [forms: forms, counts: getCounts(userId)]
+        return [forms: forms, counts: getCounts(userId, cmd.type, cmd.query)]
     }
 
-    def findDoneList(String userId, Map args) {
+    def findDoneList(String userId, ListCommand cmd) {
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
@@ -76,13 +117,15 @@ join form.user user
 join form.type type
 join form.department dept
 where form.approver.id = :userId
+and user.name like :query
 order by form.dateApproved desc
-''',[userId: userId], args
+''', [userId: userId, query: cmd.query ?: '%'],
+     [offset: cmd.offset, max: cmd.max]
 
-        return [forms: forms, counts: getCounts(userId)]
+        return [forms: forms, counts: getCounts(userId, cmd.type, cmd.query)]
     }
 
-    def findTobeList(String userId, Map args) {
+    def findTobeList(String userId, ListCommand cmd) {
         def forms = BookingForm.executeQuery '''
 select new map(
   form.id as id,
@@ -99,68 +142,126 @@ join form.user user
 join form.type type
 join form.department dept
 where form.status = :status
+and user.name like :query
 order by form.dateSubmitted desc
-''',[status: State.SUBMITTED], args
+''', [status: State.SUBMITTED, query: cmd.query ?: '%'],
+     [offset: cmd.offset, max: cmd.max]
 
-        return [forms: forms, counts: getCounts(userId)]
+        return [forms: forms, counts: getCounts(userId, cmd.type, cmd.query)]
     }
 
-    Long getPrevReviewId(String userId, Long id, ListType type) {
+    def getFormForApproval(String userId, Long id, ListType type, String query) {
+        def form = bookingFormService.getFormInfo(id)
+
+        if (!form) {
+            throw new NotFoundException()
+        }
+
+        def activity = Activities.APPROVE
+        def workitem = Workitem.findByInstanceAndActivityAndToAndDateProcessedIsNull(
+                WorkflowInstance.load(form.workflowInstanceId),
+                WorkflowActivity.load("${BookingForm.WORKFLOW_ID}.${activity}"),
+                User.load(userId),
+        )
+        domainStateMachineHandler.checkReviewer(id, userId, activity)
+
+        form.extraInfo = getUserExtraInfo(form)
+        return [
+                form: form,
+                counts: getCounts(userId, type, query),
+                workitemId: workitem ? workitem.id : null,
+                prevId: getPrevApprovalId(userId, id, type, query),
+                nextId: getNextApprovalId(userId, id, type, query),
+        ]
+    }
+
+    def getFormForApproval(String userId, Long id, ListType type, UUID workitemId) {
+        def form = bookingFormService.getFormInfo(id)
+
+        if (!form) {
+            throw new NotFoundException()
+        }
+
+        def activity = Activities.APPROVE
+        domainStateMachineHandler.checkReviewer(id, userId, activity)
+
+        form.extraInfo = getUserExtraInfo(form)
+        return [
+                form: form,
+                counts: getCounts(userId, type, null),
+                workitemId: workitemId,
+                prevId: getPrevApprovalId(userId, id, type, null),
+                nextId: getNextApprovalId(userId, id, type, null),
+        ]
+    }
+
+    private Long getPrevApprovalId(String userId, Long id, ListType type, String query) {
         switch (type) {
             case ListType.TODO:
                 return dataAccessService.getLong('''
 select form.id
 from BookingForm form
+join form.user user
 where form.status = :status
+and user.name like :query
 and form.dateChecked < (select dateChecked from BookingForm where id = :id)
 order by form.dateChecked desc
-''', [id: id, status: State.CHECKED])
+''', [id: id, status: State.CHECKED, query: query ?: '%'])
             case ListType.DONE:
                 return dataAccessService.getLong('''
 select form.id
 from BookingForm form
+join form.user user
 where form.approver.id = :userId
+and user.name like :query
 and form.dateApproved > (select dateApproved from BookingForm where id = :id)
 order by form.dateApproved asc
-''', [userId: userId, id: id])
+''', [id: id, userId: userId, query: query ?: '%'])
             case ListType.TOBE:
                 return dataAccessService.getLong('''
 select form.id
 from BookingForm form
+join form.user user
 where form.status = :status
+and user.name like :query
 and form.dateSubmitted > (select dateSubmitted from BookingForm where id = :id)
 order by form.dateSubmitted asc
-''', [id: id, status: State.SUBMITTED])
-
+''', [id: id, status: State.SUBMITTED, query: query ?: '%'])
         }
     }
 
-    Long getNextReviewId(String userId, Long id, ListType type) {
+    private Long getNextApprovalId(String userId, Long id, ListType type, String query) {
         switch (type) {
             case ListType.TODO:
                 return dataAccessService.getLong('''
 select form.id
 from BookingForm form
+join form.user user
 where form.status = :status
+and user.name like :query
 and form.dateChecked > (select dateChecked from BookingForm where id = :id)
 order by form.dateChecked asc
-''', [id: id, status: State.CHECKED])
+''', [id: id, status: State.CHECKED, query: query ?: '%'])
             case ListType.DONE:
                 return dataAccessService.getLong('''
 select form.id
 from BookingForm form
+join form.user user
 where form.approver.id = :userId
+and user.name like :query
 and form.dateApproved < (select dateApproved from BookingForm where id = :id)
 order by form.dateApproved desc
-''', [userId: userId, id: id])
+''', [id: id, userId: userId, query: query ?: '%'])
             case ListType.TOBE:
                 return dataAccessService.getLong('''
 select form.id
 from BookingForm form
+join form.user user
 where form.status = :status
+and user.name like :query
 and form.dateSubmitted < (select dateSubmitted from BookingForm where id = :id)
 order by form.dateSubmitted desc
-''', [id: id, status: State.SUBMITTED])
+''', [id: id, status: State.SUBMITTED, query: query ?: '%'])
         }
     }
 
