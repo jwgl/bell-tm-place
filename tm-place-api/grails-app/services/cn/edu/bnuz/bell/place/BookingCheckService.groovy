@@ -31,7 +31,7 @@ class BookingCheckService {
     DataAccessService dataAccessService
     SessionFactory sessionFactory
 
-    def getCounts(String userId) {
+    private getCounts(String userId) {
         def todo = dataAccessService.getInteger '''
 select count(*)
 from BookingForm form
@@ -122,7 +122,7 @@ order by form.dateChecked desc
         return [forms: forms, counts: getCounts(userId)]
     }
 
-    def getFormForReview(String userId, Long id, ListType type, String activity) {
+    def getFormForCheck(String userId, Long id, ListType type, String activity) {
         def form = bookingFormService.getFormInfo(id)
 
         def workitem = Workitem.findByInstanceAndActivityAndToAndDateProcessedIsNull(
@@ -137,12 +137,12 @@ order by form.dateChecked desc
                 form: form,
                 counts: getCounts(userId),
                 workitemId: workitem ? workitem.id : null,
-                prevId: getPrevReviewId(userId, id, type),
-                nextId: getNextReviewId(userId, id, type),
+                prevId: getPrevCheckId(userId, id, type),
+                nextId: getNextCheckId(userId, id, type),
         ]
     }
 
-    def getFormForReview(String userId, Long id, ListType type, UUID workitemId) {
+    def getFormForCheck(String userId, Long id, ListType type, UUID workitemId) {
         def form = bookingFormService.getFormInfo(id)
 
         def activity = Workitem.get(workitemId).activitySuffix
@@ -153,12 +153,12 @@ order by form.dateChecked desc
                 form: form,
                 counts: getCounts(userId),
                 workitemId: workitemId,
-                prevId: getPrevReviewId(userId, id, type),
-                nextId: getNextReviewId(userId, id, type),
+                prevId: getPrevCheckId(userId, id, type),
+                nextId: getNextCheckId(userId, id, type),
         ]
     }
 
-    Long getPrevReviewId(String userId, Long id, ListType type) {
+    private Long getPrevCheckId(String userId, Long id, ListType type) {
         switch (type) {
             case ListType.TODO:
                 return dataAccessService.getLong('''
@@ -185,7 +185,7 @@ order by form.dateChecked asc
         }
     }
 
-    Long getNextReviewId(String userId, Long id, ListType type) {
+    private Long getNextCheckId(String userId, Long id, ListType type) {
         switch (type) {
             case ListType.TODO:
                 return dataAccessService.getLong('''
