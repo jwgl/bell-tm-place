@@ -115,7 +115,7 @@ server:
 
 spring:
     application:
-        name: tm-place-api
+        name: ${info.app.name}
 
 eureka:
     client:

@@ -61,7 +61,7 @@ order by bf.dateModified desc
     def getNotice() {
         [
                 title: '教室借用须知',
-                content: systemConfigService.getString(BookingForm.CONFIG_NOTICE),
+                content: systemConfigService.get(BookingForm.CONFIG_NOTICE, ''),
         ]
     }
 
