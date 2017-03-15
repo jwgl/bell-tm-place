@@ -9,7 +9,7 @@ import grails.transaction.Transactional
 class BookingReportService {
 
     def list(Integer offset, Integer max) {
-        BookingReport.executeQuery '''
+        def reports = BookingReport.executeQuery '''
 select new map(
   report.id as id,
   creator.name as creator,
@@ -22,6 +22,13 @@ join report.creator creator
 left join report.modifier modifier
 order by report.id desc
 ''', [], [offset: offset, max: max]
+
+        def count = BookingReport.count()
+
+        return [
+                reports: reports,
+                count: count,
+        ]
     }
 
     def getInfo(Long id) {
