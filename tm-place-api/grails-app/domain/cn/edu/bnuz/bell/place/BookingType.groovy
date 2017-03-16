@@ -16,7 +16,8 @@ class BookingType {
     ]
 
     static mapping = {
-        comment     '借用类型'
+        comment     '教室借用类型'
+        id          generator: 'assigned', comment: '教室借用类型ID'
         name        comment: '名称'
         isTeaching  defaultValue: "true", comment: '是否为教学单位'
     }
