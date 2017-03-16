@@ -5,4 +5,8 @@ menuGroup 'main', {
         placeBookingApproval 51, 'PERM_PLACE_BOOKING_APPROVE', '/web/place/approvers/${userId}/bookings'
         placeBookingReport   52, 'PERM_PLACE_BOOKING_APPROVE', '/web/place/bookingReports'
     }
+
+    settings 90, {
+        placeBookingAuth     50, 'PERM_PLACE_BOOKING_APPROVE', '/web/place/settings/bookingAuths'
+    }
 }

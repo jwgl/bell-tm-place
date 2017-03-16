@@ -17,7 +17,11 @@ class UrlMappings {
 
         "/bookings"(resources: 'booking', includes: ['show'])
 
-        "/bookingReports"(resources: 'bookingReport', includes: ['index', 'show'])
+        "/bookingReports"(resources: 'bookingReport', includes: ['index'])
+
+        group "/settings", {
+            "/bookingAuths"(resources: 'bookingAuth', includes: ['index'])
+        }
 
         "500"(view:'/error')
         "404"(view:'/notFound')

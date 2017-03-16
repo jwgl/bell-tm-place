@@ -15,6 +15,7 @@ class UrlMappings {
 
         "/departments"(resources: 'department', includes: []) {
             "/bookingTypes"(controller: 'bookingForm', action: 'types', method: 'GET')
+            "/teachers"(controller: 'bookingAuth', action: 'teachers', method: 'GET')
         }
 
         "/checkers"(resources: 'checker', includes: []) {
@@ -36,6 +37,10 @@ class UrlMappings {
             collection {
                 "/unreportedForms"(action: 'unreportedForms', method: 'GET')
             }
+        }
+
+        group "/settings", {
+            "/bookingAuths"(resources: 'bookingAuth')
         }
 
         "500"(view: '/error')
