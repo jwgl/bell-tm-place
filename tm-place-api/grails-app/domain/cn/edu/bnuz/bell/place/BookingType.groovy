@@ -7,17 +7,18 @@ class BookingType {
     String name
 
     /**
-     * 是否为行政部门借用类型
+     * 是否为教学单位
      */
-    boolean isAdminDept
+    boolean isTeaching
 
     static hasMany = [
             auths: BookingAuth
     ]
 
     static mapping = {
-        comment     '借用类型'
+        comment     '教室借用类型'
+        id          generator: 'assigned', comment: '教室借用类型ID'
         name        comment: '名称'
-        isAdminDept comment: '是否为行政部门'
+        isTeaching  defaultValue: "true", comment: '是否为教学单位'
     }
 }

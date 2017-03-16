@@ -26,9 +26,13 @@ class BookingAuth implements Serializable {
 
     static mapping = {
         comment     '借用审核人'
-        id          composite: ['type', 'department', 'checker']
+        id          generator: 'identity', comment: '借用审核人ID'
         type        comment: '借用类型'
         department  comment: '审核人所属部门'
         checker     comment: '审核人'
+    }
+
+    static constraints = {
+        type        unique: ['department']
     }
 }
