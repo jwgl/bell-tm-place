@@ -17,7 +17,7 @@ class UrlMappings {
 
         "/bookings"(resources: 'booking', includes: ['show'])
 
-        "/bookingReports"(resources: 'bookingReport', includes: ['index'])
+        "/bookingReports"(resources: 'bookingReport', includes: ['index', 'show'])
 
         group "/settings", {
             "/bookingAuths"(resources: 'bookingAuth', includes: ['index'])
