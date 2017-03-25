@@ -272,7 +272,7 @@ order by form.dateSubmitted desc
             return
         }
 
-        domainStateMachineHandler.accept(form, userId, Activities.APPROVE, cmd.comment, workitemId, cmd.to)
+        domainStateMachineHandler.accept(form, userId, Activities.APPROVE, cmd.comment, workitemId)
         form.approver = Teacher.load(userId)
         form.dateApproved = new Date()
         form.save()
