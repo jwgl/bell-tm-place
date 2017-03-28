@@ -117,6 +117,7 @@ select new map(
   item.dayOfWeek as dayOfWeek,
   section.id as sectionId,
   section.name as sectionName,
+  section.includes as sectionIncludes,
   item.occupied as occupied
 )
 from BookingItem item
@@ -138,8 +139,9 @@ where item.form.id = :formId
                     oddEven  : it.oddEven,
                     dayOfWeek: it.dayOfWeek,
                     section  : [
-                            id  : it.sectionId,
-                            name: it.sectionName,
+                            id      : it.sectionId,
+                            name    : it.sectionName,
+                            includes: it.sectionIncludes,
                     ],
                     occupied : it.occupied,
             ]
