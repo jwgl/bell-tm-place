@@ -1,7 +1,7 @@
 package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.security.UserType
-import org.apache.commons.lang.builder.HashCodeBuilder
+import org.codehaus.groovy.util.HashCodeHelper
 
 /**
  * 场地借用-允许用户类型
@@ -29,11 +29,9 @@ class PlaceUserType implements Serializable {
     }
 
     int hashCode() {
-        def builder = new HashCodeBuilder()
-        if (place)
-            builder.append(place.id)
-        if (userType)
-            builder.append(userType)
-        builder.toHashCode()
+        int hash = HashCodeHelper.initHash()
+        hash = HashCodeHelper.updateHash(hash, place.id)
+        hash = HashCodeHelper.updateHash(hash, userType.id)
+        hash
     }
 }
