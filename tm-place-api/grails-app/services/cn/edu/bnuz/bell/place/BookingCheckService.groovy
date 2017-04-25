@@ -24,8 +24,6 @@ import javax.persistence.ParameterMode
 
 @Transactional
 class BookingCheckService {
-    static final CHECK_ACTIVITY = "${BookingForm.WORKFLOW_ID}.${Activities.CHECK}"
-
     BookingFormService bookingFormService
     DomainStateMachineHandler domainStateMachineHandler
     DataAccessService dataAccessService
@@ -41,19 +39,9 @@ join type.auths auth
 where auth.department = dept
 and auth.checker.id = :userId
 and form.status = :status
-''',[userId: userId, status: State.SUBMITTED]
+''', [userId: userId, status: State.SUBMITTED]
 
-        def done = dataAccessService.getInteger '''
-select count(*)
-from BookingForm form
-where exists (
-  from Workitem workitem
-  where workitem.instance = form.workflowInstance
-  and workitem.to.id = :userId
-  and workitem.activity.id = :activityId
-  and workitem.dateProcessed is not null
-)
-''',[userId: userId, activityId: CHECK_ACTIVITY]
+        def done = BookingForm.countByChecker(Teacher.load(userId))
 
         [
                 (ListType.TODO): todo,
@@ -115,9 +103,8 @@ join form.user user
 join form.type type
 join form.department dept
 where form.checker.id = :userId
-and form.status <> :status
 order by form.dateChecked desc
-''',[userId: userId, status: State.SUBMITTED], args
+''',[userId: userId], args
 
         return [forms: forms, counts: getCounts(userId)]
     }
@@ -178,10 +165,9 @@ order by form.dateSubmitted desc
 select form.id
 from BookingForm form
 where form.checker.id = :userId
-and form.status <> :status
 and form.dateChecked > (select dateChecked from BookingForm where id = :id)
 order by form.dateChecked asc
-''', [userId: userId, id: id, status: State.SUBMITTED])
+''', [userId: userId, id: id])
         }
     }
 
@@ -206,10 +192,9 @@ order by form.dateSubmitted asc
 select form.id
 from BookingForm form
 where form.checker.id = :userId
-and form.status <> :status
 and form.dateChecked < (select dateChecked from BookingForm where id = :id)
 order by form.dateChecked desc
-''', [userId: userId, id: id, status: State.SUBMITTED])
+''', [userId: userId, id: id])
         }
     }
 
