@@ -3,7 +3,7 @@ package cn.edu.bnuz.bell.place
 import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.workflow.State
-import grails.transaction.Transactional
+import grails.gorm.transactions.Transactional
 
 @Transactional
 class BookingReportService {

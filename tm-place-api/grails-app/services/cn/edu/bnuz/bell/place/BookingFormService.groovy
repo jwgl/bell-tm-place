@@ -12,7 +12,7 @@ import cn.edu.bnuz.bell.master.TermService
 import cn.edu.bnuz.bell.system.SystemConfigService
 import cn.edu.bnuz.bell.workflow.DomainStateMachineHandler
 import cn.edu.bnuz.bell.workflow.commands.SubmitCommand
-import grails.transaction.Transactional
+import grails.gorm.transactions.Transactional
 import org.hibernate.SessionFactory
 import org.hibernate.result.ResultSetOutput
 

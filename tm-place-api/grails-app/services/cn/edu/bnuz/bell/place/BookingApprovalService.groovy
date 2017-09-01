@@ -4,7 +4,6 @@ import cn.edu.bnuz.bell.http.BadRequestException
 import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.organization.Teacher
 import cn.edu.bnuz.bell.security.User
-import cn.edu.bnuz.bell.service.DataAccessService
 import cn.edu.bnuz.bell.workflow.Activities
 import cn.edu.bnuz.bell.workflow.ListCommand
 import cn.edu.bnuz.bell.workflow.ListType
@@ -15,7 +14,7 @@ import cn.edu.bnuz.bell.workflow.Workitem
 import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
-import grails.transaction.Transactional
+import grails.gorm.transactions.Transactional
 
 @Transactional
 class BookingApprovalService extends BookingCheckService {
@@ -275,7 +274,7 @@ order by form.dateSubmitted desc
         domainStateMachineHandler.accept(form, userId, Activities.APPROVE, cmd.comment, workitemId)
         form.approver = Teacher.load(userId)
         form.dateApproved = new Date()
-        form.save()
+        form.save(flush: true)
 
         insertSyncForm(form.id)
     }
