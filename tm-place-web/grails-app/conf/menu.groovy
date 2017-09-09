@@ -4,6 +4,7 @@ menuGroup 'main', {
         placeBookingCheck    51, 'PERM_PLACE_BOOKING_CHECK',   '/web/place/checkers/${userId}/bookings'
         placeBookingApproval 51, 'PERM_PLACE_BOOKING_APPROVE', '/web/place/approvers/${userId}/bookings'
         placeBookingReport   52, 'PERM_PLACE_BOOKING_APPROVE', '/web/place/bookingReports'
+        placeUsage           53, 'PERM_PLACE_USAGE_READ',      '/web/place/usages'
     }
 
     settings 90, {

@@ -39,6 +39,12 @@ class UrlMappings {
             }
         }
 
+        "/buildings"(resources: 'building', includes: ['index']) {
+            "/places"(resources: 'place', includes: ['index']) {
+                "/usages"(controller: 'place', action: 'usages')
+            }
+        }
+
         group "/settings", {
             "/bookingAuths"(resources: 'bookingAuth')
         }
