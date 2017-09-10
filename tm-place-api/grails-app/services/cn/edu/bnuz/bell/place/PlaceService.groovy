@@ -16,9 +16,9 @@ select new map(
 )
 from PlaceUserType placeUserType
 join placeUserType.place place
-left join place.allowBookingTerms placeBookingTerm
+left join place.allowBookingTerms placeBookingTerm with placeBookingTerm.term = :term
 where placeUserType.userType = :userType
-and (place.enabled = true or placeBookingTerm.term = :term)
+and (place.enabled = true or placeBookingTerm.term is not null)
 and building = :building
 ''', [term: term, userType: userType, building: building]
     }
@@ -43,9 +43,9 @@ and place in (
     select place
     from PlaceUserType placeUserType
     join placeUserType.place place
-    left join place.allowBookingTerms placeBookingTerm
+    left join place.allowBookingTerms placeBookingTerm with placeBookingTerm.term = :term
     where placeUserType.userType = :userType
-    and (place.enabled = true or placeBookingTerm.term = :term)
+    and (place.enabled = true or placeBookingTerm.term is not null)
 )
 ''', [term: term, userType: userType, placeId: placeId]
     }
