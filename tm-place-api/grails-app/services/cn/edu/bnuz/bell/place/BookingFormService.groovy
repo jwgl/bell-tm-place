@@ -165,7 +165,9 @@ where item.form.id = :formId
             throw new ForbiddenException()
         }
 
-        form.editable = domainStateMachineHandler.canUpdate(form)
+        // 防止跨学期修改提交
+        form.editable = form.term == termService.activeTerm.id &&
+                domainStateMachineHandler.canUpdate(form)
 
         return form
     }
@@ -211,6 +213,10 @@ where item.form.id = :formId
         }
 
         if (!domainStateMachineHandler.canUpdate(form)) {
+            throw new BadRequestException()
+        }
+
+        if (form.term != termService.activeTerm.id) {
             throw new BadRequestException()
         }
 
@@ -361,6 +367,10 @@ order by place.type''', [userType: userType]
             throw new BadRequestException()
         }
 
+        if (form.term.id != termService.activeTerm.id) {
+            throw new BadRequestException()
+        }
+
         form.department = Department.load(cmd.departmentId)
         form.type = BookingType.load(cmd.bookingTypeId)
         form.reason = cmd.reason
@@ -461,36 +471,5 @@ order by place.type''', [userType: userType]
         ((ResultSetOutput) outputs.current).resultList.collect { item ->
             [id: item[0], name: item[1], seat: item[2], booking: item[3]]
         }
-    }
-
-    def export(String userId, Date start, Date end) {
-        BookingForm.executeQuery '''
-select new map(
-  form.id as id,
-  form.term.id as term,
-  item.startWeek as startWeek,
-  item.endWeek as endWeek,
-  item.oddEven as oddEven,
-  item.dayOfWeek as dayOfWeek,
-  section.name as section,
-  place.name as place,
-  form.status as status,
-  type.name as type,
-  dept.name as department,
-  form.userName as userName,
-  form.dateCreated as dateCreated,
-  form.reason as reason
-)
-from BookingForm form
-join form.department dept
-join form.type type
-join form.items item
-join form.section section
-join item.place place
-where cast(form.dateCreated as date) between :start and :end
-and form.userId = :userId
-and form.status != 0
-order by form.id, item.startWeek, item.dayOfWeek, item.oddEven, section.id, room.name
-''', [userId: userId, start: start, end: end]
     }
 }
