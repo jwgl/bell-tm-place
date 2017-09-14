@@ -21,7 +21,7 @@ class BookingApprovalController implements ServiceExceptionHandler {
     def show(String approverId, Long bookingApprovalId, String id, String type) {
         ListType listType = Enum.valueOf(ListType, type)
         if (id == 'undefined') {
-            String query = params.query == 'undefined' ? '' : params.query
+            String query = params.query == null || params.query == 'undefined' ? '' : params.query
             renderJson bookingApprovalService.getFormForApproval(approverId, bookingApprovalId, listType, query)
         } else {
             renderJson bookingApprovalService.getFormForApproval(approverId, bookingApprovalId, listType, UUID.fromString(id))
