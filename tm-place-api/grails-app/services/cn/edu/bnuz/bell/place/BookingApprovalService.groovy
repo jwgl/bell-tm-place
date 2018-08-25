@@ -15,6 +15,7 @@ import cn.edu.bnuz.bell.workflow.commands.AcceptCommand
 import cn.edu.bnuz.bell.workflow.commands.RejectCommand
 import cn.edu.bnuz.bell.workflow.commands.RevokeCommand
 import grails.gorm.transactions.Transactional
+import org.springframework.orm.hibernate5.HibernateJdbcException
 
 @Transactional
 class BookingApprovalService extends BookingCheckService {
@@ -276,7 +277,12 @@ order by form.dateSubmitted desc
         form.dateApproved = new Date()
         form.save(flush: true)
 
-        insertSyncForm(form.id)
+        try {
+            insertSyncForm(form.id)
+        } catch(HibernateJdbcException e) {
+            println e.rootCause.message
+            throw e
+        }
     }
 
     def insertSyncForm(Long id) {

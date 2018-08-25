@@ -15,6 +15,7 @@ class BookingFormController implements ServiceExceptionHandler {
     def index(String userId) {
         def offset = params.int('offset') ?: 0
         def max = params.int('max') ?: 10
+        renderCount bookingFormService.listCount(userId)
         renderJson bookingFormService.list(userId, offset, max)
     }
 
@@ -89,7 +90,7 @@ class BookingFormController implements ServiceExceptionHandler {
      * @return 借用须知
      */
     def notice() {
-        renderJson bookingFormService.getNotice()
+        renderJson([notice: bookingFormService.getNotice()])
     }
 
     /**

@@ -5,6 +5,7 @@ import cn.edu.bnuz.bell.http.ForbiddenException
 import cn.edu.bnuz.bell.http.NotFoundException
 import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.organization.Department
+import cn.edu.bnuz.bell.organization.Student
 import cn.edu.bnuz.bell.security.SecurityService
 import cn.edu.bnuz.bell.security.User
 import cn.edu.bnuz.bell.security.UserType
@@ -33,7 +34,7 @@ class BookingFormService {
      * @return 申请单列表
      */
     def list(String userId, Integer offset, Integer max) {
-        def forms = BookingForm.executeQuery '''
+        BookingForm.executeQuery '''
 select new map(
   bf.id as id,
   bd.name as department,
@@ -48,21 +49,14 @@ join bf.type bt
 where bf.user.id = :userId
 order by bf.dateModified desc
 ''', [userId: userId], [offset: offset, max: max]
+    }
 
-        return [
-                forms: forms,
-                count: BookingForm.countByUser(User.load(userId)),
-                user: [
-                        phoneNumber: User.get(userId).longPhone != null
-                ],
-        ]
+    def listCount(String userId) {
+        BookingForm.countByUser(User.load(userId))
     }
 
     def getNotice() {
-        [
-                title: '教室借用须知',
-                content: systemConfigService.get(BookingForm.CONFIG_NOTICE, ''),
-        ]
+        systemConfigService.get(BookingForm.CONFIG_NOTICE, '')
     }
 
     Map getFormInfo(Long id) {
