@@ -353,7 +353,7 @@ order by place.type''', [userType: userType]
             throw new NotFoundException()
         }
 
-        if (form.user.id != userId) {
+        if (form.userId != userId) {
             throw new ForbiddenException()
         }
 
@@ -361,7 +361,7 @@ order by place.type''', [userType: userType]
             throw new BadRequestException()
         }
 
-        if (form.term.id != termService.activeTerm.id) {
+        if (form.termId != termService.activeTerm.id) {
             throw new BadRequestException()
         }
 
@@ -400,7 +400,7 @@ order by place.type''', [userType: userType]
             throw new NotFoundException()
         }
 
-        if (form.user.id != userId) {
+        if (form.userId != userId) {
             throw new ForbiddenException()
         }
 
@@ -422,7 +422,7 @@ order by place.type''', [userType: userType]
             throw new NotFoundException()
         }
 
-        if (form.user.id != userId) {
+        if (form.userId != userId) {
             throw new ForbiddenException()
         }
 
