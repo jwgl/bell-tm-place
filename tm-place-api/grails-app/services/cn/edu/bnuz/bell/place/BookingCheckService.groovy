@@ -81,7 +81,7 @@ where auth.department = dept
 and auth.checker.id = :userId
 and form.status = :status
 order by form.dateSubmitted
-''',[userId: userId, status: State.SUBMITTED], args
+''', [userId: userId, status: State.SUBMITTED], args
 
         return [forms: forms, counts: getCounts(userId)]
     }
@@ -104,7 +104,7 @@ join form.type type
 join form.department dept
 where form.checker.id = :userId
 order by form.dateChecked desc
-''',[userId: userId], args
+''', [userId: userId], args
 
         return [forms: forms, counts: getCounts(userId)]
     }
@@ -121,11 +121,11 @@ order by form.dateChecked desc
 
         form.extraInfo = getUserExtraInfo(form)
         return [
-                form: form,
-                counts: getCounts(userId),
+                form      : form,
+                counts    : getCounts(userId),
                 workitemId: workitem ? workitem.id : null,
-                prevId: getPrevCheckId(userId, id, type),
-                nextId: getNextCheckId(userId, id, type),
+                prevId    : getPrevCheckId(userId, id, type),
+                nextId    : getNextCheckId(userId, id, type),
         ]
     }
 
@@ -137,11 +137,11 @@ order by form.dateChecked desc
 
         form.extraInfo = getUserExtraInfo(form)
         return [
-                form: form,
-                counts: getCounts(userId),
+                form      : form,
+                counts    : getCounts(userId),
                 workitemId: workitemId,
-                prevId: getPrevCheckId(userId, id, type),
-                nextId: getNextCheckId(userId, id, type),
+                prevId    : getPrevCheckId(userId, id, type),
+                nextId    : getNextCheckId(userId, id, type),
         ]
     }
 
@@ -215,14 +215,14 @@ order by form.dateChecked desc
                 break
             case UserType.STUDENT:
                 Student student = Student.get(formUserId)
-                if(student.department.id != formDepartmentId) {
+                if (student.departmentId != formDepartmentId) {
                     extraInfo << student.department.name
                 }
                 extraInfo << student.adminClass.name
                 break
             case UserType.TEACHER:
                 Teacher teacher = Teacher.get(formUserId)
-                if(teacher.department.id != formDepartmentId) {
+                if (teacher.departmentId != formDepartmentId) {
                     extraInfo << teacher.department.name
                 }
                 break

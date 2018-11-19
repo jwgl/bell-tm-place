@@ -5,6 +5,7 @@ class BookingFormCommand {
     String departmentId
     Long bookingTypeId
     String reason
+    Integer numberOfUsers
 
     List<FormItem> addedItems
 

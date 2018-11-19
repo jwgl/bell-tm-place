@@ -4,7 +4,7 @@ import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.security.UserType
 import grails.gorm.transactions.Transactional
 
-@Transactional
+@Transactional(readOnly = true)
 class PlaceService {
     def findPlaces(Term term, UserType userType, String building) {
         Place.executeQuery '''
@@ -20,6 +20,7 @@ left join place.allowBookingTerms placeBookingTerm with placeBookingTerm.term = 
 where placeUserType.userType = :userType
 and (place.enabled = true or placeBookingTerm.term is not null)
 and building = :building
+order by place.name
 ''', [term: term, userType: userType, building: building]
     }
 
