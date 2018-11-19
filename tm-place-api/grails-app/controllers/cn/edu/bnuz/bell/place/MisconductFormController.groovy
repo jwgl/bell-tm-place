@@ -1,7 +1,9 @@
 package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
+import org.springframework.security.access.prepost.PreAuthorize
 
+@PreAuthorize('hasAuthority("PERM_BOOKING_MISCONDUCT_WRITE")')
 class MisconductFormController implements ServiceExceptionHandler {
     MisconductFormService misconductFormService
     def index(String keeperId, Long bookingKeepId) {
