@@ -43,6 +43,10 @@ class BookingItem {
         form: BookingForm
     ]
 
+    static hasMany = [
+            misconducts: BookingMisconduct
+    ]
+
     static mapping = {
         comment     '教室借用单项'
         id          generator: 'identity', comment: 'ID'

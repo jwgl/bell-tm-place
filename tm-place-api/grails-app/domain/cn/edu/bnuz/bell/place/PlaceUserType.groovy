@@ -17,7 +17,7 @@ class PlaceUserType implements Serializable {
         comment  '场地借用-允许用户类型'
         id       composite: ['place', 'userType']
         place    comment: '场地'
-        userType enumType: 'identity', comment: '用户类型-1:教师;2:学生;9-外部用户'
+        userType enumType: 'identity', comment: '用户类型-1:教师;2:学生;9:外部用户'
     }
 
     boolean equals(other) {

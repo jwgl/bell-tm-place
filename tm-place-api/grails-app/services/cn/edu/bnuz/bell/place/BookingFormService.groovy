@@ -73,6 +73,7 @@ select new map(
   type.id as bookingTypeId,
   type.name as bookingTypeName,
   form.reason as reason,
+  form.numberOfUsers as numberOfUsers,
   form.dateCreated as dateCreated,
   form.dateModified as dateModified,
   form.dateSubmitted as dateSubmitted,
@@ -186,7 +187,7 @@ where item.form.id = :formId
                 bookingTypes: bookingTypes,
                 bookingDays : getBookingDays(user.userType),
                 placeTypes  : getPlaceTypes(user.userType),
-                sections    : BookingSection.findAll(),
+                sections    : getSections(),
                 form        : [
                         userId       : user.id,
                         userName     : user.name,
@@ -230,7 +231,7 @@ where item.form.id = :formId
                 bookingTypes: bookingTypes,
                 bookingDays : getBookingDays(user.userType),
                 placeTypes  : getPlaceTypes(user.userType),
-                sections    : BookingSection.findAll(),
+                sections    : getSections(),
                 form        : form
         ]
     }
@@ -258,7 +259,7 @@ join bc.type bt
 join bc.department dept
 join bc.checker checker
 where dept.id = :departmentId
-order by checker, name
+order by bt.id
 ''', [departmentId: departmentId]
     }
 
@@ -302,6 +303,14 @@ order by place.type''', [userType: userType]
         }
     }
 
+    def getSections() {
+        def sections = BookingSection.findAll()
+        if (!advancedUser) {
+            sections.removeIf { it.name == '全天'}
+        }
+        sections
+    }
+
     private boolean isAdvancedUser() {
         securityService.hasRole 'ROLE_BOOKING_ADV_USER'
     }
@@ -322,6 +331,7 @@ order by place.type''', [userType: userType]
                 department: Department.load(cmd.departmentId),
                 type: BookingType.load(cmd.bookingTypeId),
                 reason: cmd.reason,
+                numberOfUsers: cmd.numberOfUsers,
                 dateCreated: now,
                 dateModified: now,
                 status: domainStateMachineHandler.initialState
@@ -368,6 +378,7 @@ order by place.type''', [userType: userType]
         form.department = Department.load(cmd.departmentId)
         form.type = BookingType.load(cmd.bookingTypeId)
         form.reason = cmd.reason
+        form.numberOfUsers = cmd.numberOfUsers
         form.dateModified = new Date()
 
         cmd.addedItems.each { item ->

@@ -19,15 +19,25 @@ class UrlMappings {
         }
 
         "/checkers"(resources: 'checker', includes: []) {
-            "/bookings"(resources: 'bookingCheck', includes:['index']) {
+            "/bookings"(resources: 'bookingCheck', includes: ['index']) {
                 "/workitems"(resources: 'bookingCheck', includes: ['show', 'patch'])
                 "/approvers"(controller: 'bookingCheck', action: 'approvers', method: 'GET')
+            }
+            "/misconducts"(resources: 'misconductCheck') {
+                collection {
+                    "/counts"(controller: 'misconductCheck', action: 'counts')
+                }
             }
         }
 
         "/approvers"(resources: 'approver', includes: []) {
-            "/bookings"(resources: 'bookingApproval', includes:['index']) {
+            "/bookings"(resources: 'bookingApproval', includes: ['index']) {
                 "/workitems"(resources: 'bookingApproval', includes: ['show', 'patch'])
+            }
+            "/misconducts"(resources: 'misconductApproval') {
+                collection {
+                    "/counts"(controller: 'misconductApproval', action: 'counts')
+                }
             }
         }
 
@@ -44,7 +54,20 @@ class UrlMappings {
             "/places"(resources: 'place', includes: ['index']) {
                 "/usages"(controller: 'place', action: 'usages')
             }
+            "/bookings"(controller: 'building', action: 'bookings', method: 'GET')
         }
+
+        "/keepers"(resources: 'keeper', includes: []) {
+            "/bookings"(resources: 'bookingKeep') {
+                "/misconducts"(resources: 'misconductForm')
+                collection {
+                    "/buildings"(controller: 'bookingKeep', action: 'buildings', method: 'GET')
+                    "/places"(controller: 'bookingKeep', action: 'places', method: 'GET')
+                }
+            }
+        }
+
+        "/misconductPictures"(resources: 'misconductPicture')
 
         group "/settings", {
             "/bookingAuths"(resources: 'bookingAuth')

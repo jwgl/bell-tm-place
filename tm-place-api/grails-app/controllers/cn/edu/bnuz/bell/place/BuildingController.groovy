@@ -10,10 +10,8 @@ class BuildingController {
 
     def index() {
         def term = termService.activeTerm
-        def userType = securityService.userType
-        def buildings = buildingService.findBuilders(term, userType)
         renderJson([
-                buildings: buildings,
+                buildings: buildingService.findBuildings(term, securityService.userType),
                 term     : [
                         startWeek: term.startWeek,
                         maxWeek  : term.maxWeek,

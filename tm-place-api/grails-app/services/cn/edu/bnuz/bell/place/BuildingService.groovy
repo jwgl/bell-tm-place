@@ -4,9 +4,9 @@ import cn.edu.bnuz.bell.master.Term
 import cn.edu.bnuz.bell.security.UserType
 import grails.gorm.transactions.Transactional
 
-@Transactional
+@Transactional(readOnly = true)
 class BuildingService {
-    List<String> findBuilders(Term term, UserType userType) {
+    List<String> findBuildings(Term term, UserType userType) {
         Place.executeQuery '''
 select distinct place.building
 from PlaceUserType placeUserType

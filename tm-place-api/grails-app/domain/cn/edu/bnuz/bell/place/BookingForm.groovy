@@ -49,6 +49,11 @@ class BookingForm implements StateObject {
     User user
 
     /**
+     * 使用人数
+     */
+    Integer numberOfUsers
+
+    /**
      * 创建时间
      */
     Date dateCreated
@@ -103,6 +108,7 @@ class BookingForm implements StateObject {
         status           sqlType: 'state', type: StateUserType, comment: '状态'
         report           comment: '通知单'
         user             comment: '借用人'
+        numberOfUsers    comment: '使用人数'
         dateCreated      comment: '创建时间'
         dateModified     comment: '修改时间'
         dateSubmitted    comment: '提交时间'
@@ -115,6 +121,7 @@ class BookingForm implements StateObject {
 
     static constraints = {
         reason           maxSize: 255
+        numberOfUsers    nullable: true
         report           nullable: true
         dateSubmitted    nullable: true
         checker          nullable: true
