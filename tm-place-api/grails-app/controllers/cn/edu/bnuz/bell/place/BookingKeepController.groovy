@@ -1,9 +1,10 @@
 package cn.edu.bnuz.bell.place
 
-
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
 import cn.edu.bnuz.bell.master.TermService
+import org.springframework.security.access.prepost.PreAuthorize
 
+@PreAuthorize('hasAuthority("PERM_BOOKING_MISCONDUCT_WRITE")')
 class BookingKeepController implements ServiceExceptionHandler {
     TermService termService
     BookingKeepService bookingKeepService

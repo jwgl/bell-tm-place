@@ -62,7 +62,7 @@ and user.name like :query
     }
 
     def list(String userId, ListCommand cmd) {
-         switch (cmd.type) {
+        switch (cmd.type) {
             case ListType.TODO:
                 return findTodoList(userId, cmd)
             case ListType.DONE:
@@ -94,7 +94,7 @@ where form.status = :status
 and user.name like :query
 order by form.dateChecked
 ''', [status: State.CHECKED, query: cmd.query ?: '%'],
-     [offset: cmd.offset, max: cmd.max]
+                [offset: cmd.offset, max: cmd.max]
 
         return [forms: forms, counts: getCounts(userId, cmd.type, cmd.query)]
     }
@@ -120,7 +120,7 @@ where form.approver.id = :userId
 and user.name like :query
 order by form.dateApproved desc
 ''', [userId: userId, query: cmd.query ?: '%'],
-     [offset: cmd.offset, max: cmd.max]
+                [offset: cmd.offset, max: cmd.max]
 
         return [forms: forms, counts: getCounts(userId, cmd.type, cmd.query)]
     }
@@ -145,7 +145,7 @@ where form.status = :status
 and user.name like :query
 order by form.dateSubmitted desc
 ''', [status: State.SUBMITTED, query: cmd.query ?: '%'],
-     [offset: cmd.offset, max: cmd.max]
+                [offset: cmd.offset, max: cmd.max]
 
         return [forms: forms, counts: getCounts(userId, cmd.type, cmd.query)]
     }
@@ -167,11 +167,11 @@ order by form.dateSubmitted desc
 
         form.extraInfo = getUserExtraInfo(form)
         return [
-                form: form,
-                counts: getCounts(userId, type, query),
+                form      : form,
+                counts    : getCounts(userId, type, query),
                 workitemId: workitem ? workitem.id : null,
-                prevId: getPrevApprovalId(userId, id, type, query),
-                nextId: getNextApprovalId(userId, id, type, query),
+                prevId    : getPrevApprovalId(userId, id, type, query),
+                nextId    : getNextApprovalId(userId, id, type, query),
         ]
     }
 
@@ -187,11 +187,11 @@ order by form.dateSubmitted desc
 
         form.extraInfo = getUserExtraInfo(form)
         return [
-                form: form,
-                counts: getCounts(userId, type, null),
+                form      : form,
+                counts    : getCounts(userId, type, null),
                 workitemId: workitemId,
-                prevId: getPrevApprovalId(userId, id, type, null),
-                nextId: getNextApprovalId(userId, id, type, null),
+                prevId    : getPrevApprovalId(userId, id, type, null),
+                nextId    : getNextApprovalId(userId, id, type, null),
         ]
     }
 
@@ -277,11 +277,19 @@ order by form.dateSubmitted desc
         form.dateApproved = new Date()
         form.save(flush: true)
 
-        try {
-            insertSyncForm(form.id)
-        } catch(HibernateJdbcException e) {
-            println e.rootCause.message
-            throw e
+        int maxRetry = 6
+        int count = 0
+        while (true) {
+            try {
+                insertSyncForm(form.id)
+            } catch (HibernateJdbcException e) {
+                if (count++ < maxRetry) {
+                    println "Retry insertSyncForm ${count}: ${e.rootCause.message}"
+                    Thread.sleep(100 * count)
+                } else {
+                    throw e
+                }
+            }
         }
     }
 
@@ -325,7 +333,7 @@ where checker.id = form.checker.id
   and form.id = :id
 ''', [id: id]
 
-        results.each {Map item ->
+        results.each { Map item ->
             new SyncBookingForm(item).save()
         }
     }
@@ -359,7 +367,7 @@ where checker.id = form.checker.id
 
     def deleteSyncForm(Long formId) {
         def forms = SyncBookingForm.findAllByFormId(formId)
-        forms.each {form ->
+        forms.each { form ->
             form.delete()
         }
     }

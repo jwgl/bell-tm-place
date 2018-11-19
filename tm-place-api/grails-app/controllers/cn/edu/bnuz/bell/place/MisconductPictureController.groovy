@@ -6,6 +6,7 @@ import net.coobird.thumbnailator.util.exif.ExifUtils
 import net.coobird.thumbnailator.util.exif.Orientation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.multipart.MultipartFile
 
 import javax.imageio.ImageIO
@@ -13,6 +14,7 @@ import javax.imageio.ImageReader
 import javax.imageio.stream.ImageInputStream
 import java.nio.file.Files
 
+@PreAuthorize('hasAnyAuthority("PERM_BOOKING_MISCONDUCT_WRITE", "PERM_BOOKING_MISCONDUCT_CHECK", "PERM_BOOKING_MISCONDUCT_APPROVE")')
 class MisconductPictureController {
     @Value('${bell.booking.misconduct.picturePath}')
     String picturePath

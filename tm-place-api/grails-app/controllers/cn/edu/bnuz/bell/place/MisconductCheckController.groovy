@@ -1,7 +1,9 @@
 package cn.edu.bnuz.bell.place
 
 import cn.edu.bnuz.bell.http.ServiceExceptionHandler
+import org.springframework.security.access.prepost.PreAuthorize
 
+@PreAuthorize('hasAuthority("PERM_BOOKING_MISCONDUCT_CHECK")')
 class MisconductCheckController implements ServiceExceptionHandler {
 	MisconductCheckService misconductCheckService
 	
