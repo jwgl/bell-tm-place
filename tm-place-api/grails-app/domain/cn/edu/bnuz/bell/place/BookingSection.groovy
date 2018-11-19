@@ -9,6 +9,7 @@ class BookingSection {
     Integer total
     Integer[] includes
     Integer displayOrder
+    Integer value
 
     static mapping = {
         comment      '节次类型'
@@ -19,5 +20,6 @@ class BookingSection {
         total        comment: '长度'
         includes     comment: '包含子节', type: PostgreSQLIntegerArrayUserType
         displayOrder comment: '显示顺序'
+        value        comment: '标志值'
     }
 }
