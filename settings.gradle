@@ -1,4 +1,3 @@
 rootProject.name = 'bell-tm-place'
 
 include 'tm-place-api'
-include 'tm-place-web'
