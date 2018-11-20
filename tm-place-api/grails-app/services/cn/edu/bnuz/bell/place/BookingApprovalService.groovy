@@ -282,9 +282,10 @@ order by form.dateSubmitted desc
         while (true) {
             try {
                 insertSyncForm(form.id)
-            } catch (HibernateJdbcException e) {
+                break
+            } catch (Exception e) {
                 if (count++ < maxRetry) {
-                    println "Retry insertSyncForm ${count}: ${e.rootCause.message}"
+                    println "Retry insertSyncForm ${count}: ${e.message}"
                     Thread.sleep(100 * count)
                 } else {
                     throw e
