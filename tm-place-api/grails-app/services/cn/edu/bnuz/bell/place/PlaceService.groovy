@@ -33,9 +33,16 @@ select new map(
     dayOfWeek as dayOfWeek,
     startSection as startSection,
     totalSection as totalSection,
-    type as type,
+    case
+        when description like '%】' then 'tk'
+        else type
+    end as type,
     department as department,
-    description as description
+    case
+      when type = 'pk' then description
+      when cast(:userType as int) = 1 and description not like '%】' then description
+      else null
+    end as description
 )
 from PlaceUsage placeUsage
 where placeUsage.term = :term
