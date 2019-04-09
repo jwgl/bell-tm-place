@@ -17,12 +17,21 @@ select new map(
     place.seat as seat,
     place.type as type
 )
-from PlaceUserType placeUserType
-join placeUserType.place place
-left join place.allowBookingTerms placeBookingTerm with placeBookingTerm.term = :term
-where (placeUserType.userType = :userType or :isAdmin = true)
-and (place.enabled = true or placeBookingTerm.term is not null)
-and building = :building
+from Place place
+where (:isAdmin = true or place in (
+    select placeUserType.place
+    from PlaceUserType placeUserType
+    where placeUserType.userType = :userType
+  )
+)
+and (place.enabled = true or exists(
+    select 1
+    from PlaceBookingTerm placeBookingTerm
+    where placeBookingTerm.term = :term
+    and placeBookingTerm.place = place
+  )
+)
+and place.building = :building
 order by place.name
 ''', [
                 term    : term,
@@ -55,13 +64,18 @@ select new map(
 from PlaceUsage placeUsage
 where placeUsage.term = :term
 and placeUsage.place.id = :placeId
-and place in (
-    select place
+and (:isAdmin = true or place in (
+    select placeUserType.place
     from PlaceUserType placeUserType
-    join placeUserType.place place
-    left join place.allowBookingTerms placeBookingTerm with placeBookingTerm.term = :term
-    where (placeUserType.userType = :userType or :isAdmin = true)
-    and (place.enabled = true or placeBookingTerm.term is not null)
+    where placeUserType.userType = :userType
+  )
+)
+and (place.enabled = true or exists(
+    select 1
+    from PlaceBookingTerm placeBookingTerm
+    where placeBookingTerm.term = :term
+    and placeBookingTerm.place = place
+  )
 )
 ''', [term: term, userType: userType, isAdmin: isAdmin, placeId: placeId]
     }
