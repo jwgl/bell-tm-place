@@ -14,17 +14,25 @@ info:
         version: '@info.app.version@'
         grailsVersion: '@info.app.grailsVersion@'
 spring:
+    jmx:
+        unique-names: true
     main:
         banner-mode: "off"
     groovy:
         template:
             check-template-location: false
-
-# Spring Actuator Endpoints are Disabled by Default
-endpoints:
-    enabled: false
-    jmx:
-        enabled: true
+    devtools:
+        restart:
+            additional-exclude:
+                - '*.gsp'
+                - '**/*.gsp'
+                - '*.gson'
+                - '**/*.gson'
+                - 'logback.groovy'
+                - '*.properties'
+management:
+    endpoints:
+        enabled-by-default: false
 
 ---
 grails:
@@ -60,8 +68,8 @@ grails:
     controllers:
         defaultScope: singleton
         upload:
-            maxFileSize: 10485760
-            maxRequestSize: 10485760
+            maxFileSize: 8388608
+            maxRequestSize: 8388608
     converters:
         encoding: UTF-8
     gorm:
