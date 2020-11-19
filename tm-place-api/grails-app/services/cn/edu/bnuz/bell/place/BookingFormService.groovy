@@ -288,17 +288,20 @@ order by bt.id
         // TODO: 考虑允许学期和部门
         if (advancedUser) {
             PlaceUserType.executeQuery '''
-select distinct place.type
+select place.type
 from PlaceUserType put
 join put.place place
-order by place.type'''
+where enabled = true
+group by place.type
+order by count(*) desc'''
         } else {
             PlaceUserType.executeQuery '''
-select distinct place.type
+select place.type
 from PlaceUserType put
 join put.place place
 where put.userType = :userType
-order by place.type''', [userType: userType]
+group by place.type
+order by count(*) desc''', [userType: userType]
         }
     }
 
