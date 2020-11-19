@@ -22,6 +22,7 @@ class PlaceController {
 
     private Boolean isAdmin() {
         return securityService.hasRole('ROLE_PLACE_BOOKING_ADMIN') ||
+                securityService.hasRole('ROLE_BOOKING_ADV_USER') ||
                 securityService.hasRole('ROLE_PLACE_KEEPER') ||
                 securityService.hasRole('ROLE_BUILDING_KEEPER')
     }

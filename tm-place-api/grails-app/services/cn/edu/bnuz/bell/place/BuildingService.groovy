@@ -7,6 +7,7 @@ import grails.gorm.transactions.Transactional
 @Transactional(readOnly = true)
 class BuildingService {
     List<String> findBuildings(Term term, UserType userType, Boolean isAdmin) {
+        println ("$term $userType $isAdmin")
         Place.executeQuery '''
 select distinct place.building
 from PlaceUserType placeUserType
